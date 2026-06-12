@@ -385,13 +385,14 @@ function SetsSection() {
 
   const [emailId, setEmailId] = useState('');
   const [phoneId, setPhoneId] = useState('');
+  const [promoCode, setPromoCode] = useState('');
   const [error, setError] = useState('');
 
   const createMut = useMutation({
-    mutationFn: () => createSet(Number(emailId), Number(phoneId)),
+    mutationFn: () => createSet(Number(emailId), Number(phoneId), promoCode || undefined),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sets'] });
-      setEmailId(''); setPhoneId(''); setError('');
+      setEmailId(''); setPhoneId(''); setPromoCode(''); setError('');
     },
     onError: (e: any) => setError(e.response?.data?.message ?? 'Failed to create set'),
   });
@@ -452,6 +453,14 @@ function SetsSection() {
                 <option key={ph.phoneId} value={ph.phoneId}>{ph.phone}</option>
               ))}
             </select>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Promo code (optional)"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              className="flex-1 h-8 text-sm"
+            />
             <Button
               size="sm"
               className="gap-1.5"

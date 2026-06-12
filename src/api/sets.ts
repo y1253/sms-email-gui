@@ -7,8 +7,8 @@ export type EmailPhoneSet = {
   createdAt: string;
 };
 
-export const createSet = (emailId: number, phoneId: number) =>
-  api.post<EmailPhoneSet>('/sets', { emailId, phoneId }).then((r) => r.data);
+export const createSet = (emailId: number, phoneId: number, promoCode?: string) =>
+  api.post<EmailPhoneSet>('/sets', { emailId, phoneId, ...(promoCode ? { promoCode } : {}) }).then((r) => r.data);
 
 export const listSets = () =>
   api.get<EmailPhoneSet[]>('/sets').then((r) => r.data);
