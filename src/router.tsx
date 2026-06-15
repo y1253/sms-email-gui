@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import GoogleCallback from './pages/GoogleCallback';
 import Dashboard from './pages/Dashboard';
+import Admin from './pages/Admin';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -32,6 +33,7 @@ export default function Router() {
           </ProtectedRoute>
         }
       />
+      <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
