@@ -11,12 +11,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('token');
+  if (token) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 export default function Router() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
+      <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+      <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
       <Route
         path="/dashboard"
