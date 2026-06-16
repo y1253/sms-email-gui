@@ -5,6 +5,8 @@ import Register from './pages/Register';
 import GoogleCallback from './pages/GoogleCallback';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -34,6 +36,8 @@ export default function Router() {
         }
       />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

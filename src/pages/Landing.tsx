@@ -108,7 +108,10 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} SMSMail. All rights reserved.
+        © {new Date().getFullYear()} SMSMail. All rights reserved.{' '}
+        <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
+        {' · '}
+        <Link to="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>
       </footer>
     </div>
   );
