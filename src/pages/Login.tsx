@@ -10,7 +10,7 @@ function buildGoogleAuthUrl() {
     client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
     redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI as string,
     response_type: 'code',
-    scope: 'email profile',
+    scope: 'openid email profile',
     access_type: 'offline',
     prompt: 'select_account',
     state: 'auth',

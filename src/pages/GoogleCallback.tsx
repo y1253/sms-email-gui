@@ -22,9 +22,10 @@ export default function GoogleCallback() {
       return;
     }
 
-    if (state === 'gmail') {
+    if (state === 'gmail' || state === 'gmail_addset') {
+      const returnPath = state === 'gmail_addset' ? '/dashboard?addSet=1' : '/dashboard';
       connectEmail(code)
-        .then(() => navigate('/dashboard'))
+        .then(() => navigate(returnPath))
         .catch((e) => {
           const msg = e?.response?.data?.message ?? e?.message ?? 'Failed to connect Gmail';
           setError(msg);
@@ -38,14 +39,17 @@ export default function GoogleCallback() {
         localStorage.setItem('token', data.accessToken);
         navigate('/dashboard');
       })
-      .catch(() => navigate('/login'));
+      .catch((e) => {
+        const msg = e?.response?.data?.message ?? e?.message ?? 'Google sign-in failed';
+        setError(msg);
+      });
   }, []);
 
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 max-w-sm text-center px-4">
-          <p className="text-red-600 font-medium">Gmail connection failed</p>
+          <p className="text-red-600 font-medium">Google sign-in failed</p>
           <p className="text-sm text-gray-500">{error}</p>
           <button
             onClick={() => navigate('/dashboard')}
