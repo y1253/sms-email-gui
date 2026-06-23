@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Zap, LogOut, Plus, Trash2, Mail, Smartphone, Loader2,
+  Zap, LogOut, Plus, Mail, Smartphone, Loader2, Settings2,
 } from 'lucide-react';
-import { listSets, deleteSet } from '@/api/sets';
+import { listSets, type EmailPhoneSet } from '@/api/sets';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import AddSetModal from '@/components/AddSetModal';
+import SetSettingsDialog from '@/components/SetSettingsDialog';
 
 function Spin({ className }: { className?: string }) {
   return <Loader2 className={cn('size-4 animate-spin', className)} />;
@@ -18,8 +19,8 @@ function Spin({ className }: { className?: string }) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
+  const [settingsSet, setSettingsSet] = useState<EmailPhoneSet | null>(null);
 
   // Auto-open the add-set modal when returning from Gmail OAuth
   useEffect(() => {
@@ -35,11 +36,6 @@ export default function Dashboard() {
   };
 
   const { data: sets, isLoading } = useQuery({ queryKey: ['sets'], queryFn: listSets });
-
-  const deleteMut = useMutation({
-    mutationFn: deleteSet,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sets'] }),
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
@@ -88,7 +84,8 @@ export default function Dashboard() {
             {sets!.map((s) => (
               <Card
                 key={s.setId}
-                className="overflow-hidden ring-1 ring-foreground/8 shadow-sm hover:shadow-md transition-shadow"
+                className="overflow-hidden ring-1 ring-foreground/8 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => setSettingsSet(s)}
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-4">
@@ -96,17 +93,22 @@ export default function Dashboard() {
                       <Zap className="size-4 text-amber-500" />
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px]">
-                        Active
-                      </Badge>
+                      {s.pendingCancelAt ? (
+                        <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[11px]">
+                          Cancelling
+                        </Badge>
+                      ) : (
+                        <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px]">
+                          Active
+                        </Badge>
+                      )}
                       <Button
                         size="icon-sm"
                         variant="ghost"
-                        onClick={() => deleteMut.mutate(s.setId)}
-                        disabled={deleteMut.isPending}
-                        className="text-muted-foreground hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); setSettingsSet(s); }}
+                        className="text-muted-foreground hover:text-foreground"
                       >
-                        {deleteMut.isPending ? <Spin /> : <Trash2 className="size-3.5" />}
+                        <Settings2 className="size-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -122,9 +124,16 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <p className="mt-3 text-[11px] text-muted-foreground">
-                    Since {new Date(s.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-[11px] text-muted-foreground">
+                      Since {new Date(s.createdAt).toLocaleDateString()}
+                    </p>
+                    {s.allowedSenders?.length > 0 && (
+                      <p className="text-[11px] text-muted-foreground">
+                        {s.allowedSenders.length} sender filter{s.allowedSenders.length > 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -161,6 +170,11 @@ export default function Dashboard() {
       </main>
 
       <AddSetModal open={modalOpen} onOpenChange={setModalOpen} />
+      <SetSettingsDialog
+        set={settingsSet}
+        open={!!settingsSet}
+        onOpenChange={(v) => { if (!v) setSettingsSet(null); }}
+      />
     </div>
   );
 }

@@ -5,6 +5,9 @@ export type EmailPhoneSet = {
   email: { emailId: number; email: string };
   phone: { phoneId: number; phone: string };
   createdAt: string;
+  pendingCancelAt: string | null;
+  allowedSenders: string[];
+  stripeSubscriptionId: string | null;
 };
 
 export const createSet = (emailId: number, phoneId: number, promoCode?: string) =>
@@ -15,3 +18,9 @@ export const listSets = () =>
 
 export const deleteSet = (setId: number) =>
   api.delete<{ message: string }>(`/sets/${setId}`).then((r) => r.data);
+
+export const updateSenders = (setId: number, senders: string[]) =>
+  api.put<{ updated: true }>(`/sets/${setId}/senders`, { senders }).then((r) => r.data);
+
+export const cancelSubscription = (setId: number) =>
+  api.post<{ cancelAt: string }>(`/sets/${setId}/cancel`).then((r) => r.data);
