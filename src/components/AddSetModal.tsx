@@ -57,9 +57,14 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
   const [promo, setPromo] = useState('');
 
   const [phoneStep, setPhoneStep] = useState<'idle' | 'code'>('idle');
-  const [phoneInput, setPhoneInput] = useState('');
+  const [countryCode, setCountryCode] = useState('1');
+  const [phoneInput, setPhoneInput] = useState(''); // national part
   const [codeInput, setCodeInput] = useState('');
   const [phoneError, setPhoneError] = useState('');
+
+  // Digits only, country code included, no "+" — the format the backend stores
+  // and matches inbound SMS against.
+  const fullPhone = `${countryCode}${phoneInput}`.replace(/\D/g, '');
 
   // Reset form state when modal closes
   useEffect(() => {
@@ -68,6 +73,7 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
       setSelectedEmailId(null);
       setPromo('');
       setPhoneStep('idle');
+      setCountryCode('1');
       setPhoneInput('');
       setCodeInput('');
       setPhoneError('');
@@ -75,17 +81,18 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
   }, [open]);
 
   const addPhoneMut = useMutation({
-    mutationFn: () => addPhone(phoneInput),
+    mutationFn: () => addPhone(fullPhone),
     onSuccess: () => { setPhoneStep('code'); setPhoneError(''); },
     onError: (e: any) => setPhoneError(e.response?.data?.message ?? 'Failed to send code'),
   });
 
   const verifyMut = useMutation({
-    mutationFn: () => verifyPhone(phoneInput, codeInput),
+    mutationFn: () => verifyPhone(fullPhone, codeInput),
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ['phones'] });
       setSelectedPhoneId(res.phoneId);
       setPhoneStep('idle');
+      setCountryCode('1');
       setPhoneInput('');
       setCodeInput('');
       setPhoneError('');
@@ -169,8 +176,19 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
 
               {phoneStep === 'idle' ? (
                 <div className="flex gap-2">
+                  <div className="flex items-center h-8 w-16 shrink-0 rounded-lg border border-input px-2 text-sm focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+                    <span className="text-muted-foreground">+</span>
+                    <input
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value.replace(/\D/g, ''))}
+                      inputMode="numeric"
+                      maxLength={4}
+                      aria-label="Country code"
+                      className="w-full bg-transparent outline-none pl-1"
+                    />
+                  </div>
                   <Input
-                    placeholder="+1 555 000 0000"
+                    placeholder="555 000 0000"
                     value={phoneInput}
                     onChange={(e) => setPhoneInput(e.target.value)}
                     className="flex-1 h-8 text-sm"
@@ -178,7 +196,7 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
                   <Button
                     size="sm"
                     onClick={() => addPhoneMut.mutate()}
-                    disabled={!phoneInput || addPhoneMut.isPending}
+                    disabled={!countryCode || fullPhone.length < 10 || addPhoneMut.isPending}
                   >
                     {addPhoneMut.isPending ? <Spin /> : 'Send code'}
                   </Button>
@@ -187,7 +205,7 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
                     Code sent to{' '}
-                    <span className="font-medium text-foreground">{phoneInput}</span>
+                    <span className="font-medium text-foreground">+{countryCode} {phoneInput}</span>
                   </p>
                   <div className="flex gap-2">
                     <Input

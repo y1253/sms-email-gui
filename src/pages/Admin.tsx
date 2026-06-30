@@ -36,6 +36,12 @@ export default function Admin() {
     const res = await api.get<Account[]>('/admin/accounts', {
       headers: { 'x-admin-password': pwd },
     });
+    // Guard against a misrouted request returning the SPA's index.html (HTTP 200,
+    // but the body is HTML, not the accounts array) — otherwise the table render
+    // crashes on accounts.map and the page goes blank.
+    if (!Array.isArray(res.data)) {
+      throw new Error('Unexpected response from /admin/accounts');
+    }
     return res.data;
   }
 
