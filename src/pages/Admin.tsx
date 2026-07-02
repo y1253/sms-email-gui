@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import api from '../api/client';
+import { getAdminAccounts, type AdminAccount } from '@/api/admin';
+import AdminAccountDialog from '@/components/AdminAccountDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-type Account = {
-  userId: number;
-  name: string;
-  email: string | null;
-  authType: string | null;
-  createdAt: string;
-  emails: string[];
-  phones: string[];
-};
+type Account = AdminAccount;
 
 const SESSION_KEY = 'admin_pwd';
 
@@ -31,25 +24,13 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[] | null>(null);
-
-  async function fetchAccounts(pwd: string): Promise<Account[]> {
-    const res = await api.get<Account[]>('/admin/accounts', {
-      headers: { 'x-admin-password': pwd },
-    });
-    // Guard against a misrouted request returning the SPA's index.html (HTTP 200,
-    // but the body is HTML, not the accounts array) — otherwise the table render
-    // crashes on accounts.map and the page goes blank.
-    if (!Array.isArray(res.data)) {
-      throw new Error('Unexpected response from /admin/accounts');
-    }
-    return res.data;
-  }
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) {
       setLoading(true);
-      fetchAccounts(saved)
+      getAdminAccounts(saved)
         .then(setAccounts)
         .catch(() => sessionStorage.removeItem(SESSION_KEY))
         .finally(() => setLoading(false));
@@ -61,7 +42,7 @@ export default function Admin() {
     setError('');
     setLoading(true);
     try {
-      const data = await fetchAccounts(password);
+      const data = await getAdminAccounts(password);
       sessionStorage.setItem(SESSION_KEY, password);
       setAccounts(data);
     } catch {
@@ -75,7 +56,10 @@ export default function Admin() {
     sessionStorage.removeItem(SESSION_KEY);
     setAccounts(null);
     setPassword('');
+    setSelectedUserId(null);
   }
+
+  const adminPwd = sessionStorage.getItem(SESSION_KEY) ?? '';
 
   if (loading && accounts === null) {
     return (
@@ -140,6 +124,8 @@ export default function Admin() {
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Auth</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Sets</th>
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3">Connected Emails</th>
                   <th className="px-4 py-3">Phones</th>
@@ -147,7 +133,11 @@ export default function Admin() {
               </thead>
               <tbody className="divide-y divide-border">
                 {accounts.map((a) => (
-                  <tr key={a.userId} className="hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={a.userId}
+                    onClick={() => setSelectedUserId(a.userId)}
+                    className="cursor-pointer hover:bg-muted/30 transition-colors"
+                  >
                     <td className="px-4 py-3 text-muted-foreground">{a.userId}</td>
                     <td className="px-4 py-3 font-medium">{a.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email ?? '—'}</td>
@@ -161,6 +151,19 @@ export default function Admin() {
                         </Badge>
                       ) : '—'}
                     </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={a.active ? 'default' : 'secondary'}
+                        className={
+                          a.active
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px]'
+                            : 'text-[11px]'
+                        }
+                      >
+                        {a.active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{a.setCount}</td>
                     <td className="px-4 py-3 text-muted-foreground">{formatDate(a.createdAt)}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {a.emails.length ? a.emails.join(', ') : '—'}
@@ -175,6 +178,12 @@ export default function Admin() {
           </div>
         </Card>
       </div>
+
+      <AdminAccountDialog
+        userId={selectedUserId}
+        password={adminPwd}
+        onClose={() => setSelectedUserId(null)}
+      />
     </div>
   );
 }
