@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Smartphone, Mail, ExternalLink, CheckCircle2, Loader2,
@@ -60,6 +60,7 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
   const [countryCode, setCountryCode] = useState('1');
   const [phoneInput, setPhoneInput] = useState(''); // national part
   const [codeInput, setCodeInput] = useState('');
+  const [consent, setConsent] = useState(false);
   const [phoneError, setPhoneError] = useState('');
 
   // Digits only, country code included, no "+" — the format the backend stores
@@ -76,12 +77,13 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
       setCountryCode('1');
       setPhoneInput('');
       setCodeInput('');
+      setConsent(false);
       setPhoneError('');
     }
   }, [open]);
 
   const addPhoneMut = useMutation({
-    mutationFn: () => addPhone(fullPhone),
+    mutationFn: () => addPhone(fullPhone, consent),
     onSuccess: () => { setPhoneStep('code'); setPhoneError(''); },
     onError: (e: any) => setPhoneError(e.response?.data?.message ?? 'Failed to send code'),
   });
@@ -95,6 +97,7 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
       setCountryCode('1');
       setPhoneInput('');
       setCodeInput('');
+      setConsent(false);
       setPhoneError('');
     },
     onError: (e: any) => setPhoneError(e.response?.data?.message ?? 'Invalid code'),
@@ -175,31 +178,50 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
               </p>
 
               {phoneStep === 'idle' ? (
-                <div className="flex gap-2">
-                  <div className="flex items-center h-8 w-16 shrink-0 rounded-lg border border-input px-2 text-sm focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
-                    <span className="text-muted-foreground">+</span>
-                    <input
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value.replace(/\D/g, ''))}
-                      inputMode="numeric"
-                      maxLength={4}
-                      aria-label="Country code"
-                      className="w-full bg-transparent outline-none pl-1"
+                <div className="space-y-2.5">
+                  <div className="flex gap-2">
+                    <div className="flex items-center h-8 w-16 shrink-0 rounded-lg border border-input px-2 text-sm focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+                      <span className="text-muted-foreground">+</span>
+                      <input
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value.replace(/\D/g, ''))}
+                        inputMode="numeric"
+                        maxLength={4}
+                        aria-label="Country code"
+                        className="w-full bg-transparent outline-none pl-1"
+                      />
+                    </div>
+                    <Input
+                      placeholder="555 000 0000"
+                      value={phoneInput}
+                      onChange={(e) => setPhoneInput(e.target.value)}
+                      className="flex-1 h-8 text-sm"
                     />
+                    <Button
+                      size="sm"
+                      onClick={() => addPhoneMut.mutate()}
+                      disabled={!consent || !countryCode || fullPhone.length < 10 || addPhoneMut.isPending}
+                    >
+                      {addPhoneMut.isPending ? <Spin /> : 'Send code'}
+                    </Button>
                   </div>
-                  <Input
-                    placeholder="555 000 0000"
-                    value={phoneInput}
-                    onChange={(e) => setPhoneInput(e.target.value)}
-                    className="flex-1 h-8 text-sm"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => addPhoneMut.mutate()}
-                    disabled={!countryCode || fullPhone.length < 10 || addPhoneMut.isPending}
-                  >
-                    {addPhoneMut.isPending ? <Spin /> : 'Send code'}
-                  </Button>
+
+                  <label className="flex gap-2 items-start cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-0.5 size-3.5 shrink-0 accent-primary"
+                    />
+                    <span className="text-[11px] leading-relaxed text-muted-foreground">
+                      I agree to receive SMS from SMSMail — email summaries and account
+                      notifications at this number. Message frequency varies. Msg &amp; data
+                      rates may apply. Reply STOP to cancel, HELP for help. See our{' '}
+                      <Link to="/terms" target="_blank" className="underline hover:text-foreground">Terms</Link>
+                      {' '}and{' '}
+                      <Link to="/privacy" target="_blank" className="underline hover:text-foreground">Privacy Policy</Link>.
+                    </span>
+                  </label>
                 </div>
               ) : (
                 <div className="space-y-2">
