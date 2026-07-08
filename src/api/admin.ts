@@ -60,3 +60,23 @@ export const getAdminAccount = (pwd: string, userId: number) =>
       headers: { 'x-admin-password': pwd },
     })
     .then((r) => r.data);
+
+export type DeletedContact = {
+  userId: number;
+  value: string;
+  originalId: number;
+  createdAt: string;
+  deletedAt: string;
+};
+
+export type DeletedContacts = {
+  emails: DeletedContact[];
+  phones: DeletedContact[];
+};
+
+export const getDeletedContacts = (pwd: string) =>
+  api
+    .get<DeletedContacts>('/admin/deleted', {
+      headers: { 'x-admin-password': pwd },
+    })
+    .then((r) => r.data);

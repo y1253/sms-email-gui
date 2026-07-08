@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import AddSetModal from '@/components/AddSetModal';
 import SetSettingsDialog from '@/components/SetSettingsDialog';
+import ManageAccountsSection from '@/components/ManageAccountsSection';
 
 function Spin({ className }: { className?: string }) {
   return <Loader2 className={cn('size-4 animate-spin', className)} />;
@@ -167,6 +168,8 @@ export default function Dashboard() {
             </Button>
           </div>
         )}
+
+        {!isLoading && <ManageAccountsSection sets={sets ?? []} />}
       </main>
 
       <AddSetModal open={modalOpen} onOpenChange={setModalOpen} />

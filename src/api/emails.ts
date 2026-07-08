@@ -11,3 +11,6 @@ export const connectEmail = (code: string) =>
 
 export const listEmails = () =>
   api.get<EmailAccount[]>('/emails').then((r) => r.data);
+
+export const deleteEmail = (emailId: number) =>
+  api.delete<{ deleted: boolean; emailId: number }>('/emails/delete', { data: { emailId } }).then((r) => r.data);

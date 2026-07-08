@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { getAdminAccounts, type AdminAccount } from '@/api/admin';
+import {
+  getAdminAccounts,
+  getDeletedContacts,
+  type AdminAccount,
+  type DeletedContacts,
+} from '@/api/admin';
 import AdminAccountDialog from '@/components/AdminAccountDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +29,7 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[] | null>(null);
+  const [deleted, setDeleted] = useState<DeletedContacts | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -55,11 +61,19 @@ export default function Admin() {
   function handleLock() {
     sessionStorage.removeItem(SESSION_KEY);
     setAccounts(null);
+    setDeleted(null);
     setPassword('');
     setSelectedUserId(null);
   }
 
   const adminPwd = sessionStorage.getItem(SESSION_KEY) ?? '';
+
+  // Load the deletion archive once authenticated.
+  useEffect(() => {
+    if (accounts && adminPwd) {
+      getDeletedContacts(adminPwd).then(setDeleted).catch(() => {});
+    }
+  }, [accounts]);
 
   if (loading && accounts === null) {
     return (
@@ -177,6 +191,63 @@ export default function Admin() {
             </table>
           </div>
         </Card>
+
+        {/* Deletion archive */}
+        <div className="mt-10">
+          <h2 className="text-lg font-bold tracking-tight">Deleted contacts</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {deleted
+              ? `${deleted.emails.length + deleted.phones.length} archived deletion${
+                  deleted.emails.length + deleted.phones.length === 1 ? '' : 's'
+                }`
+              : 'Loading…'}
+          </p>
+        </div>
+
+        {deleted && (
+          <Card className="mt-4 overflow-hidden ring-1 ring-foreground/8 shadow-sm p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border bg-muted/40 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Value</th>
+                    <th className="px-4 py-3">Account #</th>
+                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3">Deleted</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {[
+                    ...deleted.emails.map((d) => ({ ...d, type: 'email' as const })),
+                    ...deleted.phones.map((d) => ({ ...d, type: 'phone' as const })),
+                  ]
+                    .sort((a, b) => +new Date(b.deletedAt) - +new Date(a.deletedAt))
+                    .map((d) => (
+                      <tr key={`${d.type}-${d.originalId}-${d.deletedAt}`}>
+                        <td className="px-4 py-3">
+                          <Badge variant="secondary" className="text-[11px]">
+                            {d.type}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 font-medium">{d.value}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{d.userId}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(d.createdAt)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(d.deletedAt)}</td>
+                      </tr>
+                    ))}
+                  {deleted.emails.length + deleted.phones.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                        No deletions yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
       </div>
 
       <AdminAccountDialog
