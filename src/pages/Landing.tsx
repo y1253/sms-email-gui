@@ -50,7 +50,7 @@ export default function Landing() {
             to="/register"
             className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-xl hover:bg-blue-700 text-lg"
           >
-            Get started free
+            Get started
           </Link>
           <Link
             to="/login"
