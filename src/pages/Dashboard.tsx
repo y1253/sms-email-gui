@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Zap, LogOut, Plus, Mail, Smartphone, Loader2, Settings2,
+  Zap, LogOut, Plus, Mail, Smartphone, Loader2, Settings2, HelpCircle,
 } from 'lucide-react';
 import { listSets, type EmailPhoneSet } from '@/api/sets';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,17 @@ export default function Dashboard() {
             <span className="text-sm font-bold tracking-tight">SMSMail</span>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              to="/how-it-works"
+              className={buttonVariants({
+                variant: 'ghost',
+                size: 'sm',
+                className: 'gap-2 text-muted-foreground hover:text-foreground',
+              })}
+            >
+              <HelpCircle className="size-3.5" />
+              How it works
+            </Link>
             <Button size="sm" className="gap-1.5" onClick={() => setModalOpen(true)}>
               <Plus className="size-3.5" />
               New Set

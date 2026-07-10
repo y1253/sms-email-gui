@@ -25,6 +25,9 @@ export default function Landing() {
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 max-w-6xl mx-auto">
         <span className="text-xl font-bold text-blue-600">SMSMail</span>
         <div className="flex gap-3">
+          <Link to="/how-it-works" className="text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2">
+            How it works
+          </Link>
           <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2">
             Log in
           </Link>
@@ -109,6 +112,8 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400">
         © {new Date().getFullYear()} SMSMail. All rights reserved.{' '}
+        <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
+        {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
         {' · '}
         <Link to="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>
