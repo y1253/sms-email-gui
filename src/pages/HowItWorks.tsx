@@ -116,8 +116,8 @@ Invoice #204 is due Friday — reply to confirm receipt.
             title="4. Send a brand-new email"
             caption={
               <>
-                Text <strong>S</strong>, the recipient's address, then your message. The subject
-                defaults to <em>"Message from SMS"</em>.
+                Text <strong>S</strong>, the recipient's address, then your message. The email goes
+                out with no subject line.
               </>
             }
           >
@@ -193,7 +193,7 @@ Invoice #204 is due Friday — reply to confirm receipt.
                 {[
                   ['R your message', 'Reply to the most recent email'],
                   ['R 42 your message', 'Reply to email #42 (the number from the alert)'],
-                  ['S email@x.com your message', 'New email (subject "Message from SMS")'],
+                  ['S email@x.com your message', 'New email (no subject)'],
                   ['S email@x.com | Subject | Body', 'New email with a custom subject'],
                   ['HELP', 'Get the command list'],
                   ['STOP', 'Stop all messages'],
