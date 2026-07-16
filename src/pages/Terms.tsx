@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { usePricing, formatPrice } from '../api/pricing';
 
 export default function Terms() {
+  const { data: pricing } = usePricing();
   return (
     <div className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 max-w-6xl mx-auto">
@@ -90,7 +92,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">5. Billing</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Each set costs <strong>$10 USD per month</strong>, billed via Stripe.</li>
+              <li>Each set costs <strong>{formatPrice(pricing)} {(pricing?.currency ?? 'usd').toUpperCase()} per {pricing?.interval ?? 'month'}</strong>, billed via Stripe.</li>
               <li>Subscriptions renew automatically at the end of each billing period.</li>
               <li>You may cancel at any time from your dashboard. Cancellation takes effect at the end of the current billing period; no partial refunds are issued.</li>
               <li>We reserve the right to change pricing with 30 days' notice.</li>

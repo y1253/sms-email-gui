@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { usePricing, formatPrice } from '../api/pricing';
 
 const steps = [
   {
@@ -19,6 +20,7 @@ const steps = [
 ];
 
 export default function Landing() {
+  const { data: pricing } = usePricing();
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
@@ -85,8 +87,8 @@ export default function Landing() {
         <div className="max-w-md mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-12">Simple pricing</h2>
           <div className="bg-white rounded-2xl shadow-md ring-1 ring-gray-200 p-10">
-            <p className="text-5xl font-extrabold text-blue-600 mb-2">$10</p>
-            <p className="text-gray-500 mb-6">per set / month</p>
+            <p className="text-5xl font-extrabold text-blue-600 mb-2">{formatPrice(pricing) || '…'}</p>
+            <p className="text-gray-500 mb-6">per set / {pricing?.interval ?? 'month'}</p>
             <ul className="text-sm text-gray-700 space-y-3 text-left mb-8">
               {[
                 'One Gmail + one phone number',

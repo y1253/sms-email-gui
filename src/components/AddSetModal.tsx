@@ -14,19 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { listPhones, addPhone, verifyPhone } from '@/api/phones';
 import { listEmails } from '@/api/emails';
-
-function buildGmailAddSetUrl() {
-  const params = new URLSearchParams({
-    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
-    redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI as string,
-    response_type: 'code',
-    scope: ['email', 'profile', 'https://mail.google.com/'].join(' '),
-    access_type: 'offline',
-    prompt: 'consent',
-    state: 'gmail_addset',
-  });
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-}
+import { buildGmailConnectUrl } from '@/lib/googleOauth';
 
 function Spin({ className }: { className?: string }) {
   return <Loader2 className={cn('size-4 animate-spin', className)} />;
@@ -300,14 +288,17 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
             ) : null}
 
             <div className="space-y-2">
-              <a href={buildGmailAddSetUrl()}>
+              <a href={buildGmailConnectUrl()}>
                 <Button size="sm" variant="outline" className="gap-2 w-full">
                   <ExternalLink className="size-3.5" />
                   Connect Gmail
                 </Button>
               </a>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                You'll be redirected to Google to grant access, then brought right back here.
+                You'll be redirected to Google. On the consent screen, make sure to{' '}
+                <span className="font-medium text-foreground">check the box that grants access to your Gmail</span>
+                {' '}— it may be further down the page, so scroll if you don't see it. Without
+                it we can't forward your emails.
               </p>
             </div>
           </div>

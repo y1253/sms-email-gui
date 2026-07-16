@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { attachCard, listCards } from '@/api/billing';
 import { createSet } from '@/api/sets';
+import { usePricing, formatPrice } from '@/api/pricing';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ function CheckoutForm({ emailId, phoneId, email, phone, promo }: CheckoutFormPro
     queryKey: ['cards'],
     queryFn: listCards,
   });
+  const { data: pricing } = usePricing();
 
   const [selectedCardId, setSelectedCardId] = useState<string | 'new'>('new');
   const [error, setError] = useState('');
@@ -125,8 +127,8 @@ function CheckoutForm({ emailId, phoneId, email, phone, promo }: CheckoutFormPro
       {/* Price */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-3xl font-bold tracking-tight">$10</p>
-          <p className="text-sm text-muted-foreground mt-0.5">per month · cancel anytime</p>
+          <p className="text-3xl font-bold tracking-tight">{formatPrice(pricing) || '…'}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">per {pricing?.interval ?? 'month'} · cancel anytime</p>
         </div>
         {promo && (
           <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">
@@ -222,6 +224,7 @@ function CheckoutForm({ emailId, phoneId, email, phone, promo }: CheckoutFormPro
 export default function Checkout() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const { data: pricing } = usePricing();
 
   useEffect(() => {
     if (!state?.emailId || !state?.phoneId) {
@@ -261,7 +264,7 @@ export default function Checkout() {
         <div className="mb-8">
           <h1 className="text-xl font-bold tracking-tight">Checkout</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Activate your new set with a $10/month subscription
+            Activate your new set with a {formatPrice(pricing)}/{pricing?.interval ?? 'month'} subscription
           </p>
         </div>
 
