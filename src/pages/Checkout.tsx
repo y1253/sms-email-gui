@@ -12,6 +12,7 @@ import { usePricing, formatPrice } from '@/api/pricing';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { SuccessCheck } from '@/components/ui/success-check';
 import { cn } from '@/lib/utils';
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
@@ -53,6 +54,15 @@ function CheckoutForm({ emailId, phoneId, email, phone, promo }: CheckoutFormPro
     }
   }, [cards]);
 
+  // Hold the success screen long enough for the checkmark to finish drawing
+  // (~800ms) before redirecting. As an effect so StrictMode's double-invoke
+  // can't leave a second timer running.
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => navigate('/dashboard'), 2200);
+    return () => clearTimeout(t);
+  }, [success, navigate]);
+
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
@@ -81,7 +91,6 @@ function CheckoutForm({ emailId, phoneId, email, phone, promo }: CheckoutFormPro
 
       await createSet(emailId, phoneId, promo);
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (e: any) {
       setError(e.response?.data?.message ?? 'Something went wrong. Please try again.');
     } finally {
@@ -92,9 +101,7 @@ function CheckoutForm({ emailId, phoneId, email, phone, promo }: CheckoutFormPro
   if (success) {
     return (
       <div className="flex flex-col items-center gap-4 py-12 text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100">
-          <Check className="size-8 text-emerald-600" />
-        </div>
+        <SuccessCheck />
         <div>
           <p className="text-base font-semibold">Set activated!</p>
           <p className="text-sm text-muted-foreground mt-0.5">Redirecting to dashboard…</p>

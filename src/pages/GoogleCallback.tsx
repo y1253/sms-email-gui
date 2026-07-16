@@ -26,9 +26,13 @@ export default function GoogleCallback() {
 
     if (state === 'gmail' || state === 'gmail_addset') {
       setIsGmailConnect(true);
-      const returnPath = state === 'gmail_addset' ? '/dashboard?addSet=1' : '/dashboard';
+      // Hand the new emailId back so the reopened modal can select it.
       connectEmail(code)
-        .then(() => navigate(returnPath))
+        .then((em) =>
+          navigate(
+            state === 'gmail_addset' ? `/dashboard?addSet=1&emailId=${em.emailId}` : '/dashboard',
+          ),
+        )
         .catch((e) => {
           const msg = e?.response?.data?.message ?? e?.message ?? 'Failed to connect Gmail';
           setError(msg);

@@ -13,7 +13,7 @@ export const addPhone = (phone: string, consent: boolean) =>
   api.post<{ sent: boolean }>('/phones', { phone, consent }).then((r) => r.data);
 
 export const verifyPhone = (phone: string, code: string) =>
-  api.post<Phone>('/phones/verify', { phone, code }).then((r) => r.data);
+  api.post<{ verified: true; phoneId: number }>('/phones/verify', { phone, code }).then((r) => r.data);
 
 export const deletePhone = (phoneId: number) =>
   api.delete<{ message: string }>('/phones/delete', { data: { phoneId } }).then((r) => r.data);

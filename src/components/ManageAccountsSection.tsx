@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, Smartphone, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import { listEmails, deleteEmail } from '@/api/emails';
 import { listPhones, deletePhone } from '@/api/phones';
 import { type EmailPhoneSet } from '@/api/sets';
@@ -39,16 +40,19 @@ export default function ManageAccountsSection({ sets }: { sets: EmailPhoneSet[] 
   });
 
   const deleteMut = useMutation({
+    // Return the kind so the toast doesn't depend on `pending` still being set.
     mutationFn: async () => {
-      if (!pending) return;
+      if (!pending) return null;
       if (pending.kind === 'email') await deleteEmail(pending.id);
       else await deletePhone(pending.id);
+      return pending.kind;
     },
-    onSuccess: () => {
+    onSuccess: (kind) => {
       qc.invalidateQueries({ queryKey: ['emails'] });
       qc.invalidateQueries({ queryKey: ['phones'] });
       qc.invalidateQueries({ queryKey: ['sets'] });
       setPending(null);
+      if (kind) toast.success(kind === 'email' ? 'Email removed' : 'Phone removed');
     },
   });
 

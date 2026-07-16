@@ -22,10 +22,14 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [settingsSet, setSettingsSet] = useState<EmailPhoneSet | null>(null);
+  const [newEmailId, setNewEmailId] = useState<number | null>(null);
 
-  // Auto-open the add-set modal when returning from Gmail OAuth
+  // Auto-open the add-set modal when returning from Gmail OAuth, preselecting
+  // the account that was just connected.
   useEffect(() => {
     if (searchParams.get('addSet') === '1') {
+      const id = Number(searchParams.get('emailId'));
+      setNewEmailId(Number.isFinite(id) && id > 0 ? id : null);
       setModalOpen(true);
       setSearchParams({}, { replace: true });
     }
@@ -183,7 +187,11 @@ export default function Dashboard() {
         {!isLoading && <ManageAccountsSection sets={sets ?? []} />}
       </main>
 
-      <AddSetModal open={modalOpen} onOpenChange={setModalOpen} />
+      <AddSetModal
+        open={modalOpen}
+        onOpenChange={(v) => { setModalOpen(v); if (!v) setNewEmailId(null); }}
+        initialEmailId={newEmailId}
+      />
       <SetSettingsDialog
         set={settingsSet}
         open={!!settingsSet}

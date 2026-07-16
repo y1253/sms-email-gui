@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Mail, Smartphone, X, Loader2, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   type EmailPhoneSet,
   updateSenders,
@@ -47,9 +48,21 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
     }
   }, [set?.setId]);
 
+  // The chip list is updated optimistically before this fires, so a failure has
+  // to put the previous list back — otherwise the UI claims a sender is allowed
+  // that the server never stored. `prev` rides along with the mutation rather
+  // than being read from a closure, which would be stale by the time it runs.
   const sendersMut = useMutation({
-    mutationFn: (list: string[]) => updateSenders(set!.setId, list),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sets'] }),
+    mutationFn: ({ next }: { next: string[]; prev: string[] }) =>
+      updateSenders(set!.setId, next),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sets'] });
+      toast.success('Allowed senders saved');
+    },
+    onError: (e: any, { prev }) => {
+      setSenders(prev);
+      toast.error(e.response?.data?.message ?? "Couldn't save senders");
+    },
   });
 
   const cancelMut = useMutation({
@@ -57,6 +70,7 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sets'] });
       setConfirmCancel(false);
+      toast.success('Subscription cancelled');
     },
   });
 
@@ -65,6 +79,7 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sets'] });
       onOpenChange(false);
+      toast.success('Set deleted');
     },
   });
 
@@ -83,13 +98,13 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
     setSenders(next);
     setNewSender('');
     setSenderError('');
-    sendersMut.mutate(next);
+    sendersMut.mutate({ next, prev: senders });
   }
 
   function removeSender(email: string) {
     const next = senders.filter((s) => s !== email);
     setSenders(next);
-    sendersMut.mutate(next);
+    sendersMut.mutate({ next, prev: senders });
   }
 
   if (!set) return null;

@@ -11,9 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { SuccessCheck } from '@/components/ui/success-check';
 import { cn } from '@/lib/utils';
 import { listPhones, addPhone, verifyPhone } from '@/api/phones';
 import { listEmails } from '@/api/emails';
+import { listSets } from '@/api/sets';
 import { buildGmailConnectUrl } from '@/lib/googleOauth';
 
 function Spin({ className }: { className?: string }) {
@@ -23,9 +25,11 @@ function Spin({ className }: { className?: string }) {
 interface AddSetModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Gmail account to select on open — set after returning from the OAuth redirect. */
+  initialEmailId?: number | null;
 }
 
-export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
+export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddSetModalProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -39,12 +43,18 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
     queryFn: listEmails,
     enabled: open,
   });
+  const { data: sets } = useQuery({
+    queryKey: ['sets'],
+    queryFn: listSets,
+    enabled: open,
+  });
 
   const [selectedPhoneId, setSelectedPhoneId] = useState<number | null>(null);
   const [selectedEmailId, setSelectedEmailId] = useState<number | null>(null);
   const [promo, setPromo] = useState('');
 
-  const [phoneStep, setPhoneStep] = useState<'idle' | 'code'>('idle');
+  const [phoneStep, setPhoneStep] = useState<'idle' | 'code' | 'success'>('idle');
+  const [emailSuccess, setEmailSuccess] = useState(false);
   const [countryCode, setCountryCode] = useState('1');
   const [phoneInput, setPhoneInput] = useState(''); // national part
   const [codeInput, setCodeInput] = useState('');
@@ -67,8 +77,49 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
       setCodeInput('');
       setConsent(false);
       setPhoneError('');
+      setEmailSuccess(false);
     }
   }, [open]);
+
+  // Landing here with initialEmailId means we just came back from Google's
+  // consent screen — acknowledge it, since the redirect itself says nothing.
+  useEffect(() => {
+    if (!open || initialEmailId == null) return;
+    setEmailSuccess(true);
+    const t = setTimeout(() => setEmailSuccess(false), 1800);
+    return () => clearTimeout(t);
+  }, [open, initialEmailId]);
+
+  // Clear the "Phone verified" check on a timer owned by the effect, so it can't
+  // fire after the modal closes.
+  useEffect(() => {
+    if (phoneStep !== 'success') return;
+    const t = setTimeout(() => setPhoneStep('idle'), 1800);
+    return () => clearTimeout(t);
+  }, [phoneStep]);
+
+  // Default the selection once a list loads: keep the current pick if it's still
+  // valid, otherwise prefer a just-connected account, otherwise take the first
+  // row. Reading `cur` via the updater rather than a dependency is what stops a
+  // background refetch from clobbering a choice the user just made.
+  useEffect(() => {
+    if (!open || !emails) return;
+    setSelectedEmailId((cur) => {
+      if (cur !== null && emails.some((e) => e.emailId === cur)) return cur;
+      if (initialEmailId != null && emails.some((e) => e.emailId === initialEmailId)) {
+        return initialEmailId;
+      }
+      return emails[0]?.emailId ?? null;
+    });
+  }, [open, emails, initialEmailId]);
+
+  useEffect(() => {
+    if (!open || !phones) return;
+    setSelectedPhoneId((cur) => {
+      if (cur !== null && phones.some((p) => p.phoneId === cur)) return cur;
+      return phones[0]?.phoneId ?? null;
+    });
+  }, [open, phones]);
 
   const addPhoneMut = useMutation({
     mutationFn: () => addPhone(fullPhone, consent),
@@ -78,10 +129,10 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
 
   const verifyMut = useMutation({
     mutationFn: () => verifyPhone(fullPhone, codeInput),
-    onSuccess: (res: any) => {
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['phones'] });
       setSelectedPhoneId(res.phoneId);
-      setPhoneStep('idle');
+      setPhoneStep('success');
       setCountryCode('1');
       setPhoneInput('');
       setCodeInput('');
@@ -91,7 +142,18 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
     onError: (e: any) => setPhoneError(e.response?.data?.message ?? 'Invalid code'),
   });
 
-  const canActivate = selectedPhoneId !== null && selectedEmailId !== null;
+  // The server rejects a pair that already forms an active set, but only after
+  // creating (and then cancelling) the Stripe subscription — so catch it here.
+  // listSets returns active sets only, matching the server, which reactivates a
+  // soft-deleted pair rather than rejecting it.
+  const isDuplicatePair =
+    selectedEmailId !== null &&
+    selectedPhoneId !== null &&
+    (sets ?? []).some(
+      (s) => s.email.emailId === selectedEmailId && s.phone.phoneId === selectedPhoneId,
+    );
+
+  const canActivate = selectedPhoneId !== null && selectedEmailId !== null && !isDuplicatePair;
 
   const handleActivate = () => {
     const selectedEmail = emails?.find((e) => e.emailId === selectedEmailId);
@@ -161,11 +223,18 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
             ) : null}
 
             <div className="space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                {(phones?.length ?? 0) > 0 ? 'Or add new number' : 'Add your number'}
-              </p>
+              {phoneStep !== 'success' && (
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {(phones?.length ?? 0) > 0 ? 'Or add new number' : 'Add your number'}
+                </p>
+              )}
 
-              {phoneStep === 'idle' ? (
+              {phoneStep === 'success' ? (
+                <div className="flex flex-col items-center gap-2 py-4 text-center">
+                  <SuccessCheck className="size-10" />
+                  <p className="text-sm font-medium">Phone verified</p>
+                </div>
+              ) : phoneStep === 'idle' ? (
                 <div className="space-y-2.5">
                   <div className="flex gap-2">
                     <div className="flex items-center h-8 w-16 shrink-0 rounded-lg border border-input px-2 text-sm focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
@@ -260,6 +329,13 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
               )}
             </div>
 
+            {emailSuccess && (
+              <div className="flex flex-col items-center gap-2 py-4 text-center">
+                <SuccessCheck className="size-10" />
+                <p className="text-sm font-medium">Gmail connected</p>
+              </div>
+            )}
+
             {loadingEmails ? (
               <div className="flex justify-center py-3"><Spin /></div>
             ) : (emails?.length ?? 0) > 0 ? (
@@ -305,20 +381,27 @@ export default function AddSetModal({ open, onOpenChange }: AddSetModalProps) {
         </div>
 
         <Separator />
-        <div className="px-6 py-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <Input
-            placeholder="Promo code (optional)"
-            value={promo}
-            onChange={(e) => setPromo(e.target.value)}
-            className="flex-1 h-8 text-sm"
-          />
-          <Button
-            onClick={handleActivate}
-            disabled={!canActivate}
-            className="gap-2 shrink-0"
-          >
-            Activate →
-          </Button>
+        <div className="px-6 py-4 space-y-2">
+          {isDuplicatePair && (
+            <p className="text-xs text-destructive">
+              These two are already linked in a set. Pick a different combination.
+            </p>
+          )}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Input
+              placeholder="Promo code (optional)"
+              value={promo}
+              onChange={(e) => setPromo(e.target.value)}
+              className="flex-1 h-8 text-sm"
+            />
+            <Button
+              onClick={handleActivate}
+              disabled={!canActivate}
+              className="gap-2 shrink-0"
+            >
+              Activate →
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

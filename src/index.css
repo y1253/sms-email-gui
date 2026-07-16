@@ -25,6 +25,8 @@
     --color-input: var(--input);
     --color-border: var(--border);
     --color-destructive: var(--destructive);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -64,6 +66,9 @@
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
+    /* Matches Tailwind emerald-600, the green already hardcoded across the app. */
+    --success: oklch(0.596 0.145 163.225);
+    --success-foreground: oklch(0.985 0 0);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.546 0.245 264);
@@ -99,6 +104,8 @@
     --accent: oklch(0.269 0 0);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
+    --success: oklch(0.696 0.17 162.48);
+    --success-foreground: oklch(0.205 0 0);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.556 0 0);
@@ -115,6 +122,41 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Plain @theme, not @theme inline — inline would flatten these to their values
+   and the animate-* utilities would never be generated. The dash offsets are the
+   drawn path lengths in SuccessCheck; changing that SVG's geometry means changing
+   these too. */
+@theme {
+    --animate-success-ring: success-ring 450ms ease-out forwards;
+    --animate-success-check: success-check 350ms 300ms ease-out forwards;
+    --animate-success-pop: success-pop 400ms ease-out;
+
+    @keyframes success-ring {
+        from { stroke-dashoffset: 151; }
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes success-check {
+        from { stroke-dashoffset: 36; }
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes success-pop {
+        0% { transform: scale(0.85); opacity: 0; }
+        60% { transform: scale(1.05); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+}
+
+/* A checkmark that draws itself is exactly what reduced-motion users switch off —
+   land on the finished state rather than an empty circle. */
+@media (prefers-reduced-motion: reduce) {
+    .animate-success-ring,
+    .animate-success-check,
+    .animate-success-pop {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
 }
 
 @layer base {
