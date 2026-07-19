@@ -4,19 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { register } from '../api/auth';
 import Button from '../components/Button';
 import Input from '../components/Input';
-
-function buildGoogleAuthUrl() {
-  const params = new URLSearchParams({
-    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
-    redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI as string,
-    response_type: 'code',
-    scope: 'email profile',
-    access_type: 'offline',
-    prompt: 'select_account',
-    state: 'auth',
-  });
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-}
+import { buildGoogleAuthUrl } from '../lib/googleOauth';
 
 export default function Register() {
   const navigate = useNavigate();
