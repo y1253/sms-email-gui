@@ -156,7 +156,7 @@ export default function Dashboard() {
                     </p>
                     {s.allowedSenders?.length > 0 && (
                       <p className="text-[11px] text-muted-foreground">
-                        {s.allowedSenders.length} sender filter{s.allowedSenders.length > 1 ? 's' : ''}
+                        Only {s.allowedSenders.length} sender{s.allowedSenders.length > 1 ? 's' : ''}
                       </p>
                     )}
                   </div>

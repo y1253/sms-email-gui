@@ -57,7 +57,7 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
       updateSenders(set!.setId, next),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sets'] });
-      toast.success('Allowed senders saved');
+      toast.success('Sender list saved');
     },
     onError: (e: any, { prev }) => {
       setSenders(prev);
@@ -138,13 +138,13 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
         {/* Allowed Senders */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">Allowed senders</p>
+            <p className="text-sm font-medium">Text me only from these senders</p>
             {sendersMut.isPending && <Spin className="text-muted-foreground" />}
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             {senders.length === 0
-              ? 'All incoming emails are forwarded. Add senders below to filter.'
-              : 'Only emails from these addresses will be forwarded via SMS.'}
+              ? 'Right now you get a text for every email. Add addresses below to get texts only from those senders.'
+              : "You'll only get texts from these addresses. Emails from anyone else are ignored."}
           </p>
 
           {senders.length > 0 && (
@@ -169,7 +169,7 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
 
           <div className="flex gap-2">
             <Input
-              placeholder="sender@example.com"
+              placeholder="name@company.com"
               value={newSender}
               onChange={(e) => {
                 setNewSender(e.target.value);
