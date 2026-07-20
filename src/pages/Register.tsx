@@ -8,24 +8,59 @@ import { buildGoogleAuthUrl } from '../lib/googleOauth';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '' });
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    confirm_password: '',
+  });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirm_password?: string }>(
+    {},
+  );
 
-  const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
+    setFieldErrors((errs) => ({ ...errs, [field]: undefined }));
+  };
 
   const mutation = useMutation({
-    mutationFn: () => register(form),
+    // confirm_password is client-side only — the server rejects unknown body
+    // fields (ValidationPipe forbidNonWhitelisted).
+    mutationFn: () =>
+      register({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        password: form.password,
+      }),
     onSuccess: (token) => {
       localStorage.setItem('token', token as unknown as string);
       navigate('/dashboard');
     },
-    onError: (e: any) => setError(e.response?.data?.message ?? 'Registration failed'),
+    onError: (e: any) => {
+      // class-validator returns message as an array of strings.
+      const msg = e.response?.data?.message;
+      setError((Array.isArray(msg) ? msg.join(', ') : msg) ?? 'Registration failed');
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
+
+    // Mirror the server's @MinLength(6) so users don't round-trip for it.
+    if (form.password.length < 6) {
+      setFieldErrors({ password: 'Password must be at least 6 characters' });
+      return;
+    }
+    if (form.password !== form.confirm_password) {
+      setFieldErrors({ confirm_password: 'Passwords do not match' });
+      return;
+    }
+
     mutation.mutate();
   };
 
@@ -40,8 +75,21 @@ export default function Register() {
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <Input label="First name" id="first_name" value={form.first_name} onChange={set('first_name')} />
-              <Input label="Last name" id="last_name" value={form.last_name} onChange={set('last_name')} />
+              <Input
+                label="First name"
+                id="first_name"
+                value={form.first_name}
+                onChange={set('first_name')}
+                required
+                autoComplete="given-name"
+              />
+              <Input
+                label="Last name"
+                id="last_name"
+                value={form.last_name}
+                onChange={set('last_name')}
+                autoComplete="family-name"
+              />
             </div>
             <Input
               label="Email"
@@ -60,8 +108,19 @@ export default function Register() {
               onChange={set('password')}
               required
               autoComplete="new-password"
+              error={fieldErrors.password}
             />
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Input
+              label="Confirm password"
+              type="password"
+              id="confirm_password"
+              value={form.confirm_password}
+              onChange={set('confirm_password')}
+              required
+              autoComplete="new-password"
+              error={fieldErrors.confirm_password}
+            />
+            {error &&<p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" loading={mutation.isPending} className="w-full mt-1">
               Create account
             </Button>

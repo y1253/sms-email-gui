@@ -5,6 +5,7 @@ import {
   Zap, LogOut, Plus, Mail, Smartphone, Loader2, Settings2, HelpCircle,
 } from 'lucide-react';
 import { listSets, type EmailPhoneSet } from '@/api/sets';
+import { getProfile } from '@/api/auth';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,10 @@ export default function Dashboard() {
   };
 
   const { data: sets, isLoading } = useQuery({ queryKey: ['sets'], queryFn: listSets });
+  const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: getProfile });
+
+  // Google accounts without a given_name, and legacy rows, have no first name.
+  const displayName = profile?.firstName || profile?.email?.split('@')[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
@@ -69,6 +74,11 @@ export default function Dashboard() {
               <Plus className="size-3.5" />
               New Set
             </Button>
+            {displayName && (
+              <span className="hidden max-w-[12rem] truncate pl-1 text-sm font-medium sm:inline">
+                {displayName}
+              </span>
+            )}
             <Button
               variant="ghost"
               size="sm"
