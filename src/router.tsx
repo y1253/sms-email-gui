@@ -6,6 +6,7 @@ import GoogleCallback from './pages/GoogleCallback';
 import Dashboard from './pages/Dashboard';
 import Checkout from './pages/Checkout';
 import Admin from './pages/Admin';
+import AdminAccountDetail from './pages/AdminAccountDetail';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import HowItWorks from './pages/HowItWorks';
@@ -46,6 +47,7 @@ export default function Router() {
         }
       />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/accounts/:userId" element={<AdminAccountDetail />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/how-it-works" element={<HowItWorks />} />

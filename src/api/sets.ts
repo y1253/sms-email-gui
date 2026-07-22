@@ -13,6 +13,9 @@ export type EmailPhoneSet = {
 export const createSet = (emailId: number, phoneId: number, promoCode?: string) =>
   api.post<EmailPhoneSet>('/sets', { emailId, phoneId, ...(promoCode ? { promoCode } : {}) }).then((r) => r.data);
 
+export const validatePromo = (code: string) =>
+  api.get<{ valid: boolean }>('/sets/validate-promo', { params: { code } }).then((r) => r.data);
+
 export const listSets = () =>
   api.get<EmailPhoneSet[]>('/sets').then((r) => r.data);
 

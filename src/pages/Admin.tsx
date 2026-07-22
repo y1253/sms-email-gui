@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, ChevronRight } from 'lucide-react';
 import {
   getAdminAccounts,
   getDeletedContacts,
   type AdminAccount,
   type DeletedContacts,
 } from '@/api/admin';
-import AdminAccountDialog from '@/components/AdminAccountDialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,12 +26,13 @@ function formatDate(iso: string) {
 }
 
 export default function Admin() {
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[] | null>(null);
   const [deleted, setDeleted] = useState<DeletedContacts | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [view, setView] = useState<'accounts' | 'deleted'>('accounts');
 
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
@@ -63,8 +65,10 @@ export default function Admin() {
     setAccounts(null);
     setDeleted(null);
     setPassword('');
-    setSelectedUserId(null);
+    setView('accounts');
   }
+
+  const deletedCount = deleted ? deleted.emails.length + deleted.phones.length : null;
 
   const adminPwd = sessionStorage.getItem(SESSION_KEY) ?? '';
 
@@ -121,14 +125,42 @@ export default function Admin() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Admin — Accounts</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{accounts.length} accounts</p>
+            <h1 className="text-2xl font-bold tracking-tight">Admin</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {view === 'accounts'
+                ? `${accounts.length} account${accounts.length === 1 ? '' : 's'}`
+                : deletedCount === null
+                  ? 'Loading…'
+                  : `${deletedCount} archived deletion${deletedCount === 1 ? '' : 's'}`}
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleLock}>
             Lock
           </Button>
         </div>
 
+        {/* View toggle */}
+        <div className="mb-4 inline-flex rounded-lg border border-border bg-muted/40 p-1">
+          {(['accounts', 'deleted'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                view === v
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {v === 'accounts' ? 'Accounts' : 'Deleted'}
+              {v === 'deleted' && deletedCount ? (
+                <span className="ml-1.5 text-xs text-muted-foreground">{deletedCount}</span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+
+        {view === 'accounts' && (
         <Card className="overflow-hidden ring-1 ring-foreground/8 shadow-sm p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -143,14 +175,15 @@ export default function Admin() {
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3">Connected Emails</th>
                   <th className="px-4 py-3">Phones</th>
+                  <th className="px-4 py-3" aria-label="View" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {accounts.map((a) => (
                   <tr
                     key={a.userId}
-                    onClick={() => setSelectedUserId(a.userId)}
-                    className="cursor-pointer hover:bg-muted/30 transition-colors"
+                    onClick={() => navigate(`/admin/accounts/${a.userId}`)}
+                    className="group cursor-pointer hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-4 py-3 text-muted-foreground">{a.userId}</td>
                     <td className="px-4 py-3 font-medium">{a.name}</td>
@@ -185,27 +218,20 @@ export default function Admin() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {a.phones.length ? a.phones.join(', ') : '—'}
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <ChevronRight className="inline size-4 text-muted-foreground/50 transition-colors group-hover:text-foreground" />
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </Card>
+        )}
 
-        {/* Deletion archive */}
-        <div className="mt-10">
-          <h2 className="text-lg font-bold tracking-tight">Deleted contacts</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {deleted
-              ? `${deleted.emails.length + deleted.phones.length} archived deletion${
-                  deleted.emails.length + deleted.phones.length === 1 ? '' : 's'
-                }`
-              : 'Loading…'}
-          </p>
-        </div>
-
-        {deleted && (
-          <Card className="mt-4 overflow-hidden ring-1 ring-foreground/8 shadow-sm p-0">
+        {view === 'deleted' && (
+          deleted ? (
+          <Card className="overflow-hidden ring-1 ring-foreground/8 shadow-sm p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-border bg-muted/40 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -247,14 +273,13 @@ export default function Admin() {
               </table>
             </div>
           </Card>
+          ) : (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          )
         )}
       </div>
-
-      <AdminAccountDialog
-        userId={selectedUserId}
-        password={adminPwd}
-        onClose={() => setSelectedUserId(null)}
-      />
     </div>
   );
 }

@@ -15,7 +15,7 @@ import { SuccessCheck } from '@/components/ui/success-check';
 import { cn } from '@/lib/utils';
 import { listPhones, addPhone, verifyPhone } from '@/api/phones';
 import { listEmails } from '@/api/emails';
-import { listSets } from '@/api/sets';
+import { listSets, validatePromo } from '@/api/sets';
 import { buildGmailConnectUrl } from '@/lib/googleOauth';
 
 function Spin({ className }: { className?: string }) {
@@ -52,6 +52,7 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
   const [selectedPhoneId, setSelectedPhoneId] = useState<number | null>(null);
   const [selectedEmailId, setSelectedEmailId] = useState<number | null>(null);
   const [promo, setPromo] = useState('');
+  const [debouncedPromo, setDebouncedPromo] = useState('');
 
   const [phoneStep, setPhoneStep] = useState<'idle' | 'code' | 'success'>('idle');
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -71,6 +72,7 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
       setSelectedPhoneId(null);
       setSelectedEmailId(null);
       setPromo('');
+      setDebouncedPromo('');
       setPhoneStep('idle');
       setCountryCode('1');
       setPhoneInput('');
@@ -80,6 +82,26 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
       setEmailSuccess(false);
     }
   }, [open]);
+
+  // Debounce the promo input so we validate on a pause, not per keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedPromo(promo), 350);
+    return () => clearTimeout(t);
+  }, [promo]);
+
+  // Live case-insensitive check of the promo code against the backend.
+  const trimmedPromo = debouncedPromo.trim();
+  const { data: promoCheck, isFetching: checkingPromo } = useQuery({
+    queryKey: ['promo-check', trimmedPromo.toLowerCase()],
+    queryFn: () => validatePromo(trimmedPromo),
+    enabled: open && trimmedPromo.length > 0,
+  });
+  // "Pending" covers both the debounce gap and the in-flight request, so the
+  // spinner shows continuously from keystroke to answer.
+  const promoPending =
+    promo.trim().length > 0 && (checkingPromo || promo.trim() !== trimmedPromo);
+  const promoValid = !promoPending && trimmedPromo.length > 0 && promoCheck?.valid === true;
+  const promoInvalid = !promoPending && trimmedPromo.length > 0 && promoCheck?.valid === false;
 
   // Landing here with initialEmailId means we just came back from Google's
   // consent screen — acknowledge it, since the redirect itself says nothing.
@@ -388,12 +410,18 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
             </p>
           )}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <Input
-              placeholder="Promo code (optional)"
-              value={promo}
-              onChange={(e) => setPromo(e.target.value)}
-              className="flex-1 h-8 text-sm"
-            />
+            <div className="relative flex-1">
+              <Input
+                placeholder="Promo code (optional)"
+                value={promo}
+                onChange={(e) => setPromo(e.target.value)}
+                className="h-8 text-sm w-full pr-8"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                {promoPending && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+                {promoValid && <CheckCircle2 className="size-4 text-emerald-500" />}
+              </div>
+            </div>
             <Button
               onClick={handleActivate}
               disabled={!canActivate}
@@ -402,6 +430,12 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
               Activate →
             </Button>
           </div>
+          {promoValid && (
+            <p className="text-xs text-emerald-600">Promo code applied — this set is free.</p>
+          )}
+          {promoInvalid && (
+            <p className="text-xs text-muted-foreground">Invalid promo code.</p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
