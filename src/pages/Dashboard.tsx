@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Zap, LogOut, Plus, Mail, Smartphone, Loader2, Settings2, HelpCircle,
 } from 'lucide-react';
-import { listSets, type EmailPhoneSet } from '@/api/sets';
+import { listSets } from '@/api/sets';
 import { getProfile } from '@/api/auth';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +22,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
-  const [settingsSet, setSettingsSet] = useState<EmailPhoneSet | null>(null);
+  const [settingsSetId, setSettingsSetId] = useState<number | null>(null);
   const [newEmailId, setNewEmailId] = useState<number | null>(null);
 
   // Auto-open the add-set modal when returning from Gmail OAuth, preselecting
@@ -43,6 +43,10 @@ export default function Dashboard() {
 
   const { data: sets, isLoading } = useQuery({ queryKey: ['sets'], queryFn: listSets });
   const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: getProfile });
+
+  // Drive the settings dialog off the live query data (by id), not a snapshot,
+  // so a cancel/refetch is reflected inside the open dialog.
+  const settingsSet = sets?.find((s) => s.setId === settingsSetId) ?? null;
 
   // Google accounts without a given_name, and legacy rows, have no first name.
   const displayName = profile?.firstName || profile?.email?.split('@')[0];
@@ -111,7 +115,7 @@ export default function Dashboard() {
               <Card
                 key={s.setId}
                 className="overflow-hidden ring-1 ring-foreground/8 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSettingsSet(s)}
+                onClick={() => setSettingsSetId(s.setId)}
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-4">
@@ -131,7 +135,7 @@ export default function Dashboard() {
                       <Button
                         size="icon-sm"
                         variant="ghost"
-                        onClick={(e) => { e.stopPropagation(); setSettingsSet(s); }}
+                        onClick={(e) => { e.stopPropagation(); setSettingsSetId(s.setId); }}
                         className="text-muted-foreground hover:text-foreground"
                       >
                         <Settings2 className="size-3.5" />
@@ -205,7 +209,7 @@ export default function Dashboard() {
       <SetSettingsDialog
         set={settingsSet}
         open={!!settingsSet}
-        onOpenChange={(v) => { if (!v) setSettingsSet(null); }}
+        onOpenChange={(v) => { if (!v) setSettingsSetId(null); }}
       />
     </div>
   );
