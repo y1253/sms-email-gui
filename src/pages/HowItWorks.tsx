@@ -70,8 +70,8 @@ export default function HowItWorks() {
             caption={
               <>
                 The whole alert fits in one text. <strong>📎+2</strong> shows how many attachments
-                the email had (only appears when there are some), and <strong>Reply: R 42</strong>{' '}
-                is the message number you use to reply to it.
+                the email had (only appears when there are some), and{' '}
+                <strong>Reply: R 481920</strong> is the message number you use to reply to it.
               </>
             }
           >
@@ -81,7 +81,7 @@ From: Bob Smith bob@work.com
 
 Invoice #204 is due Friday — reply to confirm receipt.
 
-📎+2  |  Reply: R 42`}
+📎+2  |  Reply: R 481920`}
             </Bubble>
           </Scene>
 
@@ -103,12 +103,12 @@ Invoice #204 is due Friday — reply to confirm receipt.
             title="3. Reply to a specific email by number"
             caption={
               <>
-                Use the number from the alert (<code>Reply: R 42</code>). Just the plain number —{' '}
-                <strong>no #</strong>.
+                Use the number from the alert (<code>Reply: R 481920</code>). Just the plain number
+                — <strong>no #</strong>.
               </>
             }
           >
-            <Bubble side="you">R 42 Confirmed, received.</Bubble>
+            <Bubble side="you">R 481920 Confirmed, received.</Bubble>
             <Bubble side="from">{'Sent to Bob Smith <bob@work.com>'}</Bubble>
           </Scene>
 
