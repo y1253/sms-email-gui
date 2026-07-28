@@ -6,6 +6,7 @@ import {
   type EmailPhoneSet,
   updateSenders,
   cancelSubscription,
+  resumeSubscription,
   deleteSet,
 } from '@/api/sets';
 import {
@@ -71,6 +72,14 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
       qc.invalidateQueries({ queryKey: ['sets'] });
       setConfirmCancel(false);
       toast.success('Subscription cancelled');
+    },
+  });
+
+  const resumeMut = useMutation({
+    mutationFn: () => resumeSubscription(set!.setId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sets'] });
+      toast.success('Subscription resumed');
     },
   });
 
@@ -199,13 +208,32 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
             <div className="space-y-2.5">
               <p className="text-sm font-medium">Subscription</p>
               {cancelDate ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[11px]">
-                    Cancels {cancelDate}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Forwarding stays active until that date
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[11px]">
+                      Cancels {cancelDate}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Forwarding stays active until that date
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => resumeMut.mutate()}
+                    disabled={resumeMut.isPending}
+                  >
+                    {resumeMut.isPending ? <Spin /> : 'Resubscribe'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Billing continues as normal — you won't be charged again until{' '}
+                    {cancelDate}.
+                  </p>
+                  {resumeMut.isError && (
+                    <p className="text-xs text-destructive">
+                      {(resumeMut.error as any)?.response?.data?.message ??
+                        'Something went wrong'}
+                    </p>
+                  )}
                 </div>
               ) : confirmCancel ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2.5">

@@ -27,3 +27,8 @@ export const updateSenders = (setId: number, senders: string[]) =>
 
 export const cancelSubscription = (setId: number) =>
   api.post<{ cancelAt: string }>(`/sets/${setId}/cancel`).then((r) => r.data);
+
+export const resumeSubscription = (setId: number) =>
+  api
+    .post<{ resumed: true; nextBillingAt: string | null }>(`/sets/${setId}/resume`)
+    .then((r) => r.data);
