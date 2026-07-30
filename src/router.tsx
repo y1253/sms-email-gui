@@ -4,7 +4,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import GoogleCallback from './pages/GoogleCallback';
 import Dashboard from './pages/Dashboard';
+import Billing from './pages/Billing';
 import Checkout from './pages/Checkout';
+import AppLayout from './components/layout/AppLayout';
 import Admin from './pages/Admin';
 import AdminAccountDetail from './pages/AdminAccountDetail';
 import Privacy from './pages/Privacy';
@@ -30,14 +32,18 @@ export default function Router() {
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
+      {/* Sidebar shell. No index route — every entry point navigates to
+          /dashboard explicitly, so Sets is the default tab. */}
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <AppLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/billing" element={<Billing />} />
+      </Route>
       <Route
         path="/checkout"
         element={

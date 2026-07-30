@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { Mail, Smartphone, X, Loader2, AlertTriangle } from 'lucide-react';
+import { Mail, Smartphone, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   type EmailPhoneSet,
   updateSenders,
-  cancelSubscription,
-  resumeSubscription,
   deleteSet,
 } from '@/api/sets';
+import SubscriptionActions from '@/components/SubscriptionActions';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
@@ -36,7 +34,6 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
   const [senders, setSenders] = useState<string[]>([]);
   const [newSender, setNewSender] = useState('');
   const [senderError, setSenderError] = useState('');
-  const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
@@ -44,7 +41,6 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
       setSenders(set.allowedSenders ?? []);
       setNewSender('');
       setSenderError('');
-      setConfirmCancel(false);
       setConfirmDelete(false);
     }
   }, [set?.setId]);
@@ -63,23 +59,6 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
     onError: (e: any, { prev }) => {
       setSenders(prev);
       toast.error(e.response?.data?.message ?? "Couldn't save senders");
-    },
-  });
-
-  const cancelMut = useMutation({
-    mutationFn: () => cancelSubscription(set!.setId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['sets'] });
-      setConfirmCancel(false);
-      toast.success('Subscription cancelled');
-    },
-  });
-
-  const resumeMut = useMutation({
-    mutationFn: () => resumeSubscription(set!.setId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['sets'] });
-      toast.success('Subscription resumed');
     },
   });
 
@@ -119,13 +98,6 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
   if (!set) return null;
 
   const isPaid = set.stripeSubscriptionId && set.stripeSubscriptionId !== 'PROMO';
-  const cancelDate = set.pendingCancelAt
-    ? new Date(set.pendingCancelAt).toLocaleDateString(undefined, {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -207,75 +179,12 @@ export default function SetSettingsDialog({ set, open, onOpenChange }: Props) {
             <Separator />
             <div className="space-y-2.5">
               <p className="text-sm font-medium">Subscription</p>
-              {cancelDate ? (
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[11px]">
-                      Cancels {cancelDate}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      Forwarding stays active until that date
-                    </span>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => resumeMut.mutate()}
-                    disabled={resumeMut.isPending}
-                  >
-                    {resumeMut.isPending ? <Spin /> : 'Resubscribe'}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Billing continues as normal — you won't be charged again until{' '}
-                    {cancelDate}.
-                  </p>
-                  {resumeMut.isError && (
-                    <p className="text-xs text-destructive">
-                      {(resumeMut.error as any)?.response?.data?.message ??
-                        'Something went wrong'}
-                    </p>
-                  )}
-                </div>
-              ) : confirmCancel ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2.5">
-                  <p className="text-xs text-amber-800 flex gap-1.5 items-start">
-                    <AlertTriangle className="size-3.5 shrink-0 mt-0.5 text-amber-600" />
-                    Your subscription will be cancelled at the end of the billing period. Email
-                    forwarding stays active until then.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => cancelMut.mutate()}
-                      disabled={cancelMut.isPending}
-                    >
-                      {cancelMut.isPending ? <Spin /> : 'Confirm cancel'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setConfirmCancel(false)}
-                      disabled={cancelMut.isPending}
-                    >
-                      Keep active
-                    </Button>
-                  </div>
-                  {cancelMut.isError && (
-                    <p className="text-xs text-destructive">
-                      {(cancelMut.error as any)?.response?.data?.message ?? 'Something went wrong'}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60 hover:bg-destructive/5"
-                  onClick={() => setConfirmCancel(true)}
-                >
-                  Cancel subscription
-                </Button>
-              )}
+              {/* key resets the confirm state when a different set is opened */}
+              <SubscriptionActions
+                key={set.setId}
+                setId={set.setId}
+                pendingCancelAt={set.pendingCancelAt}
+              />
             </div>
           </>
         )}
