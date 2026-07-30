@@ -1,4 +1,5 @@
 import api from './client';
+import type { BillingInvoice } from './billing';
 
 export type AdminAccount = {
   userId: number;
@@ -36,7 +37,12 @@ export type AdminAccountDetail = {
   phones: { phone: string; addedAt: string; deletedAt: string | null }[];
   sets: AdminAccountSet[];
   setCounts: { total: number; active: number };
-  transactions: { amount: string; createdAt: string }[];
+  // Live Stripe invoices, same shape and source as the user's Billing page —
+  // the `transaction` table is never written to. Amounts are in minor units.
+  transactions: BillingInvoice[];
+  // Set only when Stripe itself failed; an empty list with a null error means
+  // the account genuinely has no charges.
+  transactionsError: string | null;
 };
 
 // Admin routes are gated by the x-admin-password header (not the x-token JWT

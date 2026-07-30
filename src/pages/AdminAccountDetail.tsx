@@ -2,12 +2,15 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Mail, Smartphone, Loader2, CreditCard, ChevronLeft, Trash2,
+  Download, ExternalLink,
 } from 'lucide-react';
 import { getAdminAccount, type AdminAccountSet } from '@/api/admin';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import InvoiceStatusBadge from '@/components/billing/InvoiceStatusBadge';
+import { formatDate as formatShortDate, formatMoney } from '@/lib/format';
 
 const SESSION_KEY = 'admin_pwd';
 
@@ -68,9 +71,11 @@ export default function AdminAccountDetail() {
     enabled: Number.isFinite(userId),
   });
 
-  const txTotal = data
-    ? data.transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0)
-    : 0;
+  // Stripe amounts are minor units, and only paid invoices are money actually
+  // collected — an unpaid or void invoice must not inflate the total.
+  const paid = data?.transactions.filter((t) => t.status === 'paid') ?? [];
+  const txTotal = paid.reduce((sum, t) => sum + t.amount, 0);
+  const txCurrency = paid[0]?.currency ?? data?.transactions[0]?.currency ?? 'usd';
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -143,7 +148,10 @@ export default function AdminAccountDetail() {
                 <Stat value={data.setCounts.total} label="Total sets" />
                 <Stat value={data.setCounts.active} label="Active sets" />
                 <Stat value={data.transactions.length} label="Transactions" />
-                <Stat value={`$${txTotal.toFixed(2)}`} label="Total charged" />
+                <Stat
+                  value={formatMoney(txTotal, txCurrency)}
+                  label="Total charged"
+                />
               </CardContent>
             </Card>
 
@@ -281,19 +289,63 @@ export default function AdminAccountDetail() {
             {/* Transactions */}
             <Card className="ring-1 ring-foreground/8 shadow-sm">
               <CardContent className="space-y-3">
-                <p className="text-sm font-semibold">Transactions</p>
-                {data.transactions.length === 0 ? (
+                <p className="text-sm font-semibold">
+                  Transactions{' '}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    ({data.transactions.length})
+                  </span>
+                </p>
+                {/* Stripe is the source here, so distinguish "Stripe is down"
+                    from "this account has never been charged". */}
+                {data.transactionsError ? (
+                  <p className="text-xs text-destructive">
+                    {data.transactionsError}
+                  </p>
+                ) : data.transactions.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No transactions.</p>
                 ) : (
                   <div className="flex flex-col">
                     {data.transactions.map((t, i) => (
-                      <div key={i}>
+                      <div key={t.id}>
                         {i > 0 && <Separator />}
-                        <div className="flex items-center justify-between py-2 text-sm">
-                          <span className="font-medium">${t.amount}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(t.createdAt)}
-                          </span>
+                        <div className="flex items-start justify-between gap-3 py-2.5 text-sm">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium">
+                              {formatShortDate(t.paidAt ?? t.created)}
+                            </span>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {t.description ?? t.number ?? '—'}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="font-medium tabular-nums">
+                              {formatMoney(t.amount, t.currency)}
+                            </span>
+                            <InvoiceStatusBadge status={t.status} />
+                            {/* Both are null while an invoice is still a draft. */}
+                            {t.hostedInvoiceUrl && (
+                              <a
+                                href={t.hostedInvoiceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="View invoice in Stripe"
+                                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                              >
+                                <ExternalLink className="size-3.5" />
+                              </a>
+                            )}
+                            {t.invoicePdf && (
+                              <a
+                                href={t.invoicePdf}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Download receipt"
+                                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                              >
+                                <Download className="size-3.5" />
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

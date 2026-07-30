@@ -1,34 +1,17 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Download, ExternalLink, Loader2 } from 'lucide-react';
 import { listInvoices, type BillingInvoice } from '@/api/billing';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
 import { apiError } from '@/lib/errors';
 import { formatDate, formatMoney } from '@/lib/format';
+import InvoiceStatusBadge from './InvoiceStatusBadge';
 
 const PAGE_SIZE = 12;
-
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  paid: { label: 'Paid', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-  open: { label: 'Unpaid', className: 'border-amber-200 bg-amber-50 text-amber-700' },
-  draft: { label: 'Pending', className: 'border-border bg-muted text-muted-foreground' },
-  uncollectible: { label: 'Failed', className: 'border-destructive/30 bg-destructive/10 text-destructive' },
-  void: { label: 'Void', className: 'border-border bg-muted text-muted-foreground' },
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_BADGE[status] ?? {
-    label: status,
-    className: 'border-border bg-muted text-muted-foreground',
-  };
-  return <Badge className={cn('text-[11px] capitalize', s.className)}>{s.label}</Badge>;
-}
 
 export default function TransactionsTable() {
   const {
@@ -98,7 +81,7 @@ export default function TransactionsTable() {
                         {formatMoney(inv.amount, inv.currency)}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={inv.status} />
+                        <InvoiceStatusBadge status={inv.status} />
                       </TableCell>
                       <TableCell className="pr-5 text-right">
                         <div className="flex items-center justify-end gap-1">
