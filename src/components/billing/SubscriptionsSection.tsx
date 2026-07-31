@@ -6,8 +6,8 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import SubscriptionActions from '@/components/SubscriptionActions';
-import { formatDate, formatMoney } from '@/lib/format';
 import { apiError } from '@/lib/errors';
+import { billingLine } from '@/lib/billing';
 
 interface Props {
   subs: BillingSubscription[] | undefined;
@@ -17,22 +17,16 @@ interface Props {
   onAddSet: () => void;
 }
 
-/** "$10.00 / month · Renews Aug 29, 2026" — or the promo/cancelling variants. */
-function billingLine(s: BillingSubscription): string {
-  if (s.promo) return 'Free — promo code';
-
-  const price =
-    s.amount != null ? formatMoney(s.amount, s.currency ?? 'usd') : null;
-  const recurring = price
-    ? `${price}${s.interval ? ` / ${s.interval}` : ''}`
-    : null;
-
-  // A pending-cancel subscription is never billed again — never say "Renews".
-  const when = s.currentPeriodEnd
-    ? `${s.status === 'pending_cancel' ? 'Ends' : 'Renews'} ${formatDate(s.currentPeriodEnd)}`
-    : null;
-
-  return [recurring, when].filter(Boolean).join(' · ') || 'Subscription details unavailable';
+/** Adapts the customer-side shape to the shared line builder. */
+function subLine(s: BillingSubscription): string {
+  return billingLine({
+    promo: s.promo,
+    amount: s.amount,
+    currency: s.currency,
+    interval: s.interval,
+    cancelling: s.status === 'pending_cancel',
+    periodEnd: s.currentPeriodEnd,
+  });
 }
 
 export default function SubscriptionsSection({
@@ -116,7 +110,7 @@ export default function SubscriptionsSection({
                     </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground">{billingLine(s)}</p>
+                  <p className="text-xs text-muted-foreground">{subLine(s)}</p>
                 </div>
 
                 <div className="shrink-0 sm:max-w-xs">

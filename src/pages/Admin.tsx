@@ -25,6 +25,37 @@ function formatDate(iso: string) {
   });
 }
 
+/**
+ * Billing at a glance: a scheduled cancellation is the thing worth spotting in
+ * a list, so it wins over the renewal date. All of it comes live from Stripe.
+ */
+function BillingCell({ account: a }: { account: Account }) {
+  if (a.pendingCancelCount > 0) {
+    return (
+      <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[11px]">
+        Cancels{a.pendingCancelAt ? ` ${formatDate(a.pendingCancelAt)}` : ''}
+        {a.pendingCancelCount > 1 ? ` (${a.pendingCancelCount})` : ''}
+      </Badge>
+    );
+  }
+  if (a.nextRenewalAt) {
+    return (
+      <span className="text-muted-foreground">
+        Renews {formatDate(a.nextRenewalAt)}
+      </span>
+    );
+  }
+  // No paid subscription at all — distinguish a free promo set from nothing.
+  if (a.promoCount > 0) {
+    return (
+      <Badge variant="secondary" className="text-[11px]">
+        Promo
+      </Badge>
+    );
+  }
+  return <span className="text-muted-foreground">—</span>;
+}
+
 export default function Admin() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -161,6 +192,14 @@ export default function Admin() {
         </div>
 
         {view === 'accounts' && (
+        <>
+        {/* One Stripe call feeds every row's Billing cell, so if it failed the
+            whole column is blank — say so instead of implying nobody pays. */}
+        {accounts[0]?.subscriptionsError && (
+          <p className="mb-2 text-xs text-destructive">
+            {accounts[0].subscriptionsError} — the Billing column is unavailable.
+          </p>
+        )}
         <Card className="overflow-hidden ring-1 ring-foreground/8 shadow-sm p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -172,6 +211,7 @@ export default function Admin() {
                   <th className="px-4 py-3">Auth</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Sets</th>
+                  <th className="px-4 py-3">Billing</th>
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3">Connected Emails</th>
                   <th className="px-4 py-3">Phones</th>
@@ -211,6 +251,9 @@ export default function Admin() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{a.setCount}</td>
+                    <td className="px-4 py-3">
+                      <BillingCell account={a} />
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{formatDate(a.createdAt)}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {a.emails.length ? a.emails.join(', ') : '—'}
@@ -227,6 +270,7 @@ export default function Admin() {
             </table>
           </div>
         </Card>
+        </>
         )}
 
         {view === 'deleted' && (

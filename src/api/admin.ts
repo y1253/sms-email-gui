@@ -9,6 +9,13 @@ export type AdminAccount = {
   createdAt: string;
   active: number | null;
   setCount: number;
+  // Billing state, derived live from Stripe. nextRenewalAt is the soonest
+  // upcoming charge; pendingCancelAt the soonest date service stops.
+  nextRenewalAt: string | null;
+  pendingCancelAt: string | null;
+  pendingCancelCount: number;
+  promoCount: number;
+  subscriptionsError: string | null;
   emails: string[];
   phones: string[];
 };
@@ -22,7 +29,17 @@ export type AdminAccountSet = {
   email: string | null;
   phone: string | null;
   promo: boolean;
+  // Derived from Stripe, not from the DB — `pendingCancelAt` above goes stale
+  // when a subscription is cancelled from the Stripe dashboard.
   status: 'active' | 'cancelled' | 'pending_cancel';
+  renewsAt: string | null;
+  endsAt: string | null;
+  stripeStatus: string | null;
+  amount: number | null;
+  currency: string | null;
+  interval: string | null;
+  /** Stripe and the DB disagree about whether this set is cancelling. */
+  dbDrift: boolean;
 };
 
 export type AdminAccountDetail = {
@@ -37,6 +54,8 @@ export type AdminAccountDetail = {
   phones: { phone: string; addedAt: string; deletedAt: string | null }[];
   sets: AdminAccountSet[];
   setCounts: { total: number; active: number };
+  nextRenewalAt: string | null;
+  subscriptionsError: string | null;
   // Live Stripe invoices, same shape and source as the user's Billing page —
   // the `transaction` table is never written to. Amounts are in minor units.
   transactions: BillingInvoice[];

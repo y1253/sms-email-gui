@@ -2,7 +2,7 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Mail, Smartphone, Loader2, CreditCard, ChevronLeft, Trash2,
-  Download, ExternalLink,
+  Download, ExternalLink, AlertTriangle,
 } from 'lucide-react';
 import { getAdminAccount, type AdminAccountSet } from '@/api/admin';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import InvoiceStatusBadge from '@/components/billing/InvoiceStatusBadge';
 import { formatDate as formatShortDate, formatMoney } from '@/lib/format';
+import { billingLine } from '@/lib/billing';
 
 const SESSION_KEY = 'admin_pwd';
 
@@ -31,9 +32,11 @@ function SetStatusBadge({ set }: { set: AdminAccountSet }) {
     );
   }
   if (set.status === 'pending_cancel') {
+    // endsAt comes from Stripe; pendingCancelAt is the DB fallback.
+    const on = set.endsAt ?? set.pendingCancelAt;
     return (
       <Badge className="border-amber-200 bg-amber-50 text-amber-700 text-[11px]">
-        Cancels{set.pendingCancelAt ? ` ${formatDate(set.pendingCancelAt)}` : ''}
+        Cancels{on ? ` ${formatDate(on)}` : ''}
       </Badge>
     );
   }
@@ -152,6 +155,12 @@ export default function AdminAccountDetail() {
                   value={formatMoney(txTotal, txCurrency)}
                   label="Total charged"
                 />
+                <Stat
+                  value={
+                    data.nextRenewalAt ? formatShortDate(data.nextRenewalAt) : '—'
+                  }
+                  label="Next billing"
+                />
               </CardContent>
             </Card>
 
@@ -245,6 +254,13 @@ export default function AdminAccountDetail() {
                     ({data.setCounts.active} active · {data.setCounts.total} total)
                   </span>
                 </p>
+                {/* Billing state is Stripe-derived, so say when Stripe is the
+                    part that failed rather than showing sets as plain Active. */}
+                {data.subscriptionsError && (
+                  <p className="text-xs text-destructive">
+                    {data.subscriptionsError} — billing state below may be stale.
+                  </p>
+                )}
                 {data.sets.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No sets.</p>
                 ) : (
@@ -267,6 +283,19 @@ export default function AdminAccountDetail() {
                           </div>
                           <SetStatusBadge set={s} />
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          {billingLine({
+                            promo: s.promo,
+                            amount: s.amount,
+                            currency: s.currency,
+                            interval: s.interval,
+                            cancelling: s.status === 'pending_cancel',
+                            periodEnd:
+                              s.status === 'cancelled'
+                                ? null
+                                : (s.renewsAt ?? s.endsAt ?? s.pendingCancelAt),
+                          })}
+                        </p>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                           <span>Created {formatDate(s.createdAt)}</span>
                           {s.promo ? (
@@ -277,6 +306,19 @@ export default function AdminAccountDetail() {
                             <span className="font-mono">{s.stripeSubscriptionId}</span>
                           ) : (
                             <span>No subscription</span>
+                          )}
+                          {/* Stripe says one thing, pending_cancel_at says another.
+                              Nothing handles customer.subscription.updated, so a
+                              dashboard cancel never reaches the DB. */}
+                          {s.dbDrift && (
+                            <Badge
+                              variant="secondary"
+                              className="gap-1 text-[10px] text-amber-700"
+                              title="Stripe and the database disagree about this subscription's cancel state"
+                            >
+                              <AlertTriangle className="size-3" />
+                              DB out of sync
+                            </Badge>
                           )}
                         </div>
                       </div>
