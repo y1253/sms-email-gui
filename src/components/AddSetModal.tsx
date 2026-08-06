@@ -394,9 +394,9 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
               </a>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 You'll be redirected to Google. On the consent screen, make sure to{' '}
-                <span className="font-medium text-foreground">check the box that grants access to your Gmail</span>
-                {' '}— it may be further down the page, so scroll if you don't see it. Without
-                it we can't forward your emails.
+                <span className="font-medium text-foreground">check both Gmail boxes — reading your email and sending on your behalf</span>
+                {' '}— they may be further down the page, so scroll if you don't see them.
+                Without both we can't forward your emails or send your replies.
               </p>
             </div>
           </div>

@@ -62,8 +62,9 @@ export default function GoogleCallback() {
           <p className="text-sm text-gray-500">{error}</p>
           {isGmailConnect && (
             <p className="text-xs text-gray-400 leading-relaxed">
-              On Google's screen, scroll down and check the box that grants access to your
-              Gmail. If the checkbox no longer appears, remove SMSMail at{' '}
+              On Google's screen, scroll down and check both Gmail boxes — reading your
+              email and sending on your behalf. If the checkboxes no longer appear, remove
+              SMSMail at{' '}
               <a
                 href="https://myaccount.google.com/permissions"
                 target="_blank"
