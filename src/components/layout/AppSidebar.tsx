@@ -39,7 +39,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary shadow-sm">
           <Zap className="size-4 text-primary-foreground" />
         </div>
-        <span className="text-sm font-bold tracking-tight">SMSMail</span>
+        <span className="text-sm font-bold tracking-tight">EmailOnText</span>
       </Link>
 
       <nav className="flex-1 space-y-1 px-3 py-4">

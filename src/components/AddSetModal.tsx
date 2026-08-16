@@ -293,7 +293,7 @@ export default function AddSetModal({ open, onOpenChange, initialEmailId }: AddS
                       className="mt-0.5 size-3.5 shrink-0 accent-primary"
                     />
                     <span className="text-[11px] leading-relaxed text-muted-foreground">
-                      I agree to receive SMS from SMSMail — email summaries and account
+                      I agree to receive SMS from EmailOnText — email summaries and account
                       notifications at this number. Message frequency varies. Msg &amp; data
                       rates may apply. Reply STOP to cancel, HELP for help. See our{' '}
                       <Link to="/terms" target="_blank" className="underline hover:text-foreground">Terms</Link>

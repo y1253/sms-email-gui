@@ -6,7 +6,7 @@ export default function Terms() {
   return (
     <div className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 max-w-6xl mx-auto">
-        <Link to="/" className="text-xl font-bold text-blue-600">SMSMail</Link>
+        <Link to="/" className="text-xl font-bold text-blue-600">EmailOnText</Link>
         <Link to="/" className="text-sm font-medium text-gray-600 hover:text-gray-900">
           ← Back to home
         </Link>
@@ -20,7 +20,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using SMSMail ("Service"), you agree to be bound by these Terms of
+              By accessing or using EmailOnText ("Service"), you agree to be bound by these Terms of
               Service ("Terms"). If you do not agree, do not use the Service.
             </p>
           </div>
@@ -28,7 +28,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">2. Service Description</h2>
             <p>
-              SMSMail forwards incoming Gmail messages to a linked mobile phone number as SMS
+              EmailOnText forwards incoming Gmail messages to a linked mobile phone number as SMS
               summaries. Users can reply to or compose emails via SMS commands. Each pairing of one
               Gmail account and one phone number is called a "set".
             </p>
@@ -37,7 +37,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">3. SMS Messaging Program</h2>
             <p>
-              SMSMail operates an SMS program that delivers your email summaries and
+              EmailOnText operates an SMS program that delivers your email summaries and
               account notifications to a mobile number you provide.
             </p>
             <ul className="list-disc pl-5 space-y-2 mt-2">
@@ -56,7 +56,7 @@ export default function Terms() {
                 how many emails you receive.
               </li>
               <li>
-                <strong>Cost:</strong> SMSMail does not charge for SMS, but{' '}
+                <strong>Cost:</strong> EmailOnText does not charge for SMS, but{' '}
                 <strong>message &amp; data rates may apply</strong> from your carrier.
               </li>
               <li>
@@ -113,7 +113,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">7. Gmail Data &amp; Limited Use</h2>
             <p>
-              SMSMail accesses your Gmail data solely to detect new emails and generate SMS
+              EmailOnText accesses your Gmail data solely to detect new emails and generate SMS
               summaries for delivery to your registered phone number. Your Gmail data is not used for
               advertising, is not sold, and is not shared with any third party beyond what is
               necessary to operate the Service (see our{' '}
@@ -151,7 +151,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">10. Limitation of Liability</h2>
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, SMSMAIL SHALL NOT BE LIABLE FOR ANY INDIRECT,
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, EmailOnText SHALL NOT BE LIABLE FOR ANY INDIRECT,
               INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM YOUR USE OF OR INABILITY TO
               USE THE SERVICE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL
               LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU IN THE TWELVE MONTHS PRIOR TO THE
@@ -182,7 +182,7 @@ export default function Terms() {
       </main>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400 mt-16">
-        © {new Date().getFullYear()} SMSMail. All rights reserved.{' '}
+        © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
         {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>

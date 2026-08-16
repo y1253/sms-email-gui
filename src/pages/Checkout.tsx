@@ -262,7 +262,7 @@ export default function Checkout() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary shadow-sm">
               <Zap className="size-4 text-primary-foreground" />
             </div>
-            <span className="text-sm font-bold tracking-tight">SMSMail</span>
+            <span className="text-sm font-bold tracking-tight">EmailOnText</span>
           </div>
         </div>
       </header>

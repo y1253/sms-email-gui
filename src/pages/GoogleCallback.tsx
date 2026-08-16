@@ -64,7 +64,7 @@ export default function GoogleCallback() {
             <p className="text-xs text-gray-400 leading-relaxed">
               On Google's screen, scroll down and check both Gmail boxes — reading your
               email and sending on your behalf. If the checkboxes no longer appear, remove
-              SMSMail at{' '}
+              EmailOnText at{' '}
               <a
                 href="https://myaccount.google.com/permissions"
                 target="_blank"

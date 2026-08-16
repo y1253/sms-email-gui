@@ -25,7 +25,7 @@ export default function Landing() {
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 max-w-6xl mx-auto">
-        <span className="text-xl font-bold text-blue-600">SMSMail</span>
+        <span className="text-xl font-bold text-blue-600">EmailOnText</span>
         <div className="flex gap-3">
           <Link to="/how-it-works" className="text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2">
             How it works
@@ -48,7 +48,7 @@ export default function Landing() {
           Your Gmail, delivered by text
         </h1>
         <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-          No internet? No problem. SMSMail forwards important emails to your phone as SMS and lets you reply right from your messages app.
+          No internet? No problem. EmailOnText forwards important emails to your phone as SMS and lets you reply right from your messages app.
         </p>
         <div className="flex gap-4 justify-center">
           <Link
@@ -113,7 +113,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} SMSMail. All rights reserved.{' '}
+        © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
         {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>

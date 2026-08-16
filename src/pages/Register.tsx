@@ -68,7 +68,7 @@ export default function Register() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link to="/" className="text-2xl font-bold text-blue-600">SMSMail</Link>
+          <Link to="/" className="text-2xl font-bold text-blue-600">EmailOnText</Link>
           <p className="text-gray-500 mt-2 text-sm">Create your account</p>
         </div>
 

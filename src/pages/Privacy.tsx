@@ -4,7 +4,7 @@ export default function Privacy() {
   return (
     <div className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 max-w-6xl mx-auto">
-        <Link to="/" className="text-xl font-bold text-blue-600">SMSMail</Link>
+        <Link to="/" className="text-xl font-bold text-blue-600">EmailOnText</Link>
         <Link to="/" className="text-sm font-medium text-gray-600 hover:text-gray-900">
           ← Back to home
         </Link>
@@ -18,9 +18,9 @@ export default function Privacy() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">1. Introduction</h2>
             <p>
-              SMSMail ("we", "our", or "us") operates an email-to-SMS forwarding service. This Privacy
+              EmailOnText ("we", "our", or "us") operates an email-to-SMS forwarding service. This Privacy
               Policy explains what personal data we collect, how we use it, and your rights regarding
-              that data. By using SMSMail you agree to this policy.
+              that data. By using EmailOnText you agree to this policy.
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export default function Privacy() {
               <li>Send service-related notifications (e.g., verification codes).</li>
             </ul>
             <p className="mt-3">
-              SMSMail's use of information received from Google APIs adheres to the{' '}
+              EmailOnText's use of information received from Google APIs adheres to the{' '}
               <a
                 href="https://developers.google.com/terms/api-services-user-data-policy"
                 target="_blank"
@@ -127,7 +127,7 @@ export default function Privacy() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">8. Children's Privacy</h2>
             <p>
-              SMSMail is not directed at children under 13. We do not knowingly collect personal
+              EmailOnText is not directed at children under 13. We do not knowingly collect personal
               information from children.
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function Privacy() {
       </main>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400 mt-16">
-        © {new Date().getFullYear()} SMSMail. All rights reserved.{' '}
+        © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
         {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>

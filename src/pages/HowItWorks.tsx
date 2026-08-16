@@ -50,7 +50,7 @@ export default function HowItWorks() {
   return (
     <div className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 max-w-6xl mx-auto">
-        <Link to="/" className="text-xl font-bold text-blue-600">SMSMail</Link>
+        <Link to="/" className="text-xl font-bold text-blue-600">EmailOnText</Link>
         <Link to="/" className="text-sm font-medium text-gray-600 hover:text-gray-900">
           ← Back to home
         </Link>
@@ -59,7 +59,7 @@ export default function HowItWorks() {
       <main className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-2">How it works</h1>
         <p className="text-gray-500 text-lg mb-10 max-w-2xl">
-          SMSMail turns your inbox into text messages. When an email arrives, you get a short SMS
+          EmailOnText turns your inbox into text messages. When an email arrives, you get a short SMS
           summary — and you can reply or send new emails just by texting back. Here's exactly what
           that looks like.
         </p>
@@ -168,11 +168,11 @@ Invoice #204 is due Friday — reply to confirm receipt.
           >
             <Bubble side="you">STOP</Bubble>
             <Bubble side="from">
-              SMSMail: You're unsubscribed and will get no more messages. Reply START to resubscribe.
+              EmailOnText: You're unsubscribed and will get no more messages. Reply START to resubscribe.
             </Bubble>
             <Bubble side="you">START</Bubble>
             <Bubble side="from">
-              SMSMail: You're resubscribed to SMSMail alerts. Reply HELP for help, STOP to
+              EmailOnText: You're resubscribed to EmailOnText alerts. Reply HELP for help, STOP to
               unsubscribe.
             </Bubble>
           </Scene>
@@ -230,7 +230,7 @@ Invoice #204 is due Friday — reply to confirm receipt.
       </main>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400 mt-16">
-        © {new Date().getFullYear()} SMSMail. All rights reserved.{' '}
+        © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
         {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
