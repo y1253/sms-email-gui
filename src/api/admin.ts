@@ -64,12 +64,10 @@ export type AdminAccountDetail = {
   transactionsError: string | null;
 };
 
-// Admin routes are gated by the x-admin-password header (not the x-token JWT
-// interceptor), so the password is passed explicitly on each call.
-export async function getAdminAccounts(pwd: string): Promise<AdminAccount[]> {
-  const res = await api.get<AdminAccount[]>('/admin/accounts', {
-    headers: { 'x-admin-password': pwd },
-  });
+// Admin routes are gated server-side by the JWT (x-token, added by the axios
+// interceptor) plus the ADMIN_EMAILS allowlist — no separate admin password.
+export async function getAdminAccounts(): Promise<AdminAccount[]> {
+  const res = await api.get<AdminAccount[]>('/admin/accounts');
   // Guard against a misrouted request returning the SPA's index.html (HTTP 200,
   // but the body is HTML, not the accounts array) — otherwise the table render
   // crashes on accounts.map and the page goes blank.
@@ -79,11 +77,9 @@ export async function getAdminAccounts(pwd: string): Promise<AdminAccount[]> {
   return res.data;
 }
 
-export const getAdminAccount = (pwd: string, userId: number) =>
+export const getAdminAccount = (userId: number) =>
   api
-    .get<AdminAccountDetail>(`/admin/accounts/${userId}`, {
-      headers: { 'x-admin-password': pwd },
-    })
+    .get<AdminAccountDetail>(`/admin/accounts/${userId}`)
     .then((r) => r.data);
 
 export type DeletedContact = {
@@ -99,9 +95,7 @@ export type DeletedContacts = {
   phones: DeletedContact[];
 };
 
-export const getDeletedContacts = (pwd: string) =>
+export const getDeletedContacts = () =>
   api
-    .get<DeletedContacts>('/admin/deleted', {
-      headers: { 'x-admin-password': pwd },
-    })
+    .get<DeletedContacts>('/admin/deleted')
     .then((r) => r.data);

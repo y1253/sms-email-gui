@@ -1,3 +1,32 @@
+// OAuth `state` does double duty: it carries the flow (sign-in vs. Gmail-connect)
+// AND acts as a CSRF token. We generate a random nonce per request, remember it
+// in sessionStorage, and the callback rejects any response whose state doesn't
+// match — defeating OAuth CSRF / authorization-code injection.
+const STATE_KEY = 'google_oauth_state';
+
+function makeState(flow: 'auth' | 'gmail_addset'): string {
+  const nonce =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+  const state = `${flow}.${nonce}`;
+  sessionStorage.setItem(STATE_KEY, state);
+  return state;
+}
+
+/**
+ * Validate the state returned on the OAuth callback against the one we stored,
+ * and return the flow it encodes. Returns null if it doesn't match (possible
+ * CSRF / forged callback) — the caller must abort.
+ */
+export function consumeOAuthState(received: string | null): 'auth' | 'gmail_addset' | null {
+  const stored = sessionStorage.getItem(STATE_KEY);
+  sessionStorage.removeItem(STATE_KEY);
+  if (!received || !stored || received !== stored) return null;
+  const flow = received.split('.')[0];
+  return flow === 'auth' || flow === 'gmail_addset' ? flow : null;
+}
+
 // Sign-in / sign-up only. `openid` is required — without it Google returns no
 // id_token and the server rejects the exchange. No offline access: the login
 // path discards refresh tokens, and asking for them only adds a consent prompt.
@@ -8,7 +37,7 @@ export function buildGoogleAuthUrl() {
     response_type: 'code',
     scope: 'openid email profile',
     prompt: 'select_account',
-    state: 'auth',
+    state: makeState('auth'),
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
@@ -36,7 +65,7 @@ export function buildGmailConnectUrl() {
     ].join(' '),
     access_type: 'offline',
     prompt: 'consent',
-    state: 'gmail_addset',
+    state: makeState('gmail_addset'),
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }

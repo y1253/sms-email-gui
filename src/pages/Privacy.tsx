@@ -68,8 +68,30 @@ export default function Privacy() {
               >
                 Google API Services User Data Policy
               </a>
-              , including the Limited Use requirements.
+              , including the Limited Use requirements. Specifically:
             </p>
+            <ul className="list-disc pl-5 space-y-2 mt-2">
+              <li>
+                We only use Google user data to provide and improve the user-facing
+                email-to-SMS features described above.
+              </li>
+              <li>
+                We do not transfer Google user data to others except as necessary to
+                provide these features, to comply with applicable law, or as part of a
+                merger or acquisition with your explicit consent.
+              </li>
+              <li>
+                We do not use Google user data for serving advertisements, and we never
+                sell it.
+              </li>
+              <li>
+                We do not allow humans to read your Gmail data, except: with your
+                affirmative consent for specific messages, where necessary for security
+                purposes (such as investigating abuse), to comply with applicable law,
+                or where the data has been aggregated and anonymized. Email content is
+                processed transiently and automatically to produce SMS summaries.
+              </li>
+            </ul>
           </div>
 
           <div>

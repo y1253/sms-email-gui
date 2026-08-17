@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { googleLogin } from '../api/auth';
 import { connectEmail } from '../api/emails';
-import { buildGmailConnectUrl } from '../lib/googleOauth';
+import { buildGmailConnectUrl, consumeOAuthState } from '../lib/googleOauth';
 import Spinner from '../components/Spinner';
 
 export default function GoogleCallback() {
@@ -17,22 +17,26 @@ export default function GoogleCallback() {
     ran.current = true;
 
     const code = params.get('code');
-    const state = params.get('state');
+    const rawState = params.get('state');
 
     if (!code) {
       navigate('/login');
       return;
     }
 
-    if (state === 'gmail' || state === 'gmail_addset') {
+    // Verify state against the nonce we stored before redirecting. A mismatch
+    // means a forged/replayed callback (OAuth CSRF) — refuse it.
+    const flow = consumeOAuthState(rawState);
+    if (!flow) {
+      setError('Security check failed (invalid state). Please start again.');
+      return;
+    }
+
+    if (flow === 'gmail_addset') {
       setIsGmailConnect(true);
       // Hand the new emailId back so the reopened modal can select it.
       connectEmail(code)
-        .then((em) =>
-          navigate(
-            state === 'gmail_addset' ? `/dashboard?addSet=1&emailId=${em.emailId}` : '/dashboard',
-          ),
-        )
+        .then((em) => navigate(`/dashboard?addSet=1&emailId=${em.emailId}`))
         .catch((e) => {
           const msg = e?.response?.data?.message ?? e?.message ?? 'Failed to connect Gmail';
           setError(msg);
@@ -40,7 +44,7 @@ export default function GoogleCallback() {
       return;
     }
 
-    // state === 'auth' — exchange code for JWT
+    // flow === 'auth' — exchange code for JWT
     googleLogin(code)
       .then((data) => {
         localStorage.setItem('token', data.accessToken);

@@ -9,13 +9,10 @@ import {
 } from '@/api/admin';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 type Account = AdminAccount;
-
-const SESSION_KEY = 'admin_pwd';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -58,55 +55,35 @@ function BillingCell({ account: a }: { account: Account }) {
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[] | null>(null);
   const [deleted, setDeleted] = useState<DeletedContacts | null>(null);
   const [view, setView] = useState<'accounts' | 'deleted'>('accounts');
 
+  // Access is enforced server-side by the JWT + ADMIN_EMAILS allowlist. Just try
+  // to load; a 401/403 means this user isn't an admin.
   useEffect(() => {
-    const saved = sessionStorage.getItem(SESSION_KEY);
-    if (saved) {
-      setLoading(true);
-      getAdminAccounts(saved)
-        .then(setAccounts)
-        .catch(() => sessionStorage.removeItem(SESSION_KEY))
-        .finally(() => setLoading(false));
-    }
-  }, []);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
     setLoading(true);
-    try {
-      const data = await getAdminAccounts(password);
-      sessionStorage.setItem(SESSION_KEY, password);
-      setAccounts(data);
-    } catch {
-      setError('Incorrect password.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleLock() {
-    sessionStorage.removeItem(SESSION_KEY);
-    setAccounts(null);
-    setDeleted(null);
-    setPassword('');
-    setView('accounts');
-  }
+    getAdminAccounts()
+      .then(setAccounts)
+      .catch((err) => {
+        const status = err?.response?.status;
+        setError(
+          status === 401 || status === 403
+            ? 'You are not authorized to view this page.'
+            : 'Failed to load admin data.',
+        );
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const deletedCount = deleted ? deleted.emails.length + deleted.phones.length : null;
 
-  const adminPwd = sessionStorage.getItem(SESSION_KEY) ?? '';
-
-  // Load the deletion archive once authenticated.
+  // Load the deletion archive once the accounts have loaded.
   useEffect(() => {
-    if (accounts && adminPwd) {
-      getDeletedContacts(adminPwd).then(setDeleted).catch(() => {});
+    if (accounts) {
+      getDeletedContacts().then(setDeleted).catch(() => {});
     }
   }, [accounts]);
 
@@ -123,28 +100,15 @@ export default function Admin() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="w-full max-w-sm ring-1 ring-foreground/8 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Admin Access</CardTitle>
+            <CardTitle className="text-lg">Admin</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="space-y-1.5">
-                <label htmlFor="admin-pwd" className="text-sm font-medium">
-                  Password
-                </label>
-                <Input
-                  id="admin-pwd"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoFocus
-                />
-                {error && <p className="text-xs text-destructive">{error}</p>}
-              </div>
-              <Button type="submit" disabled={!password || loading} className="w-full">
-                {loading ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-                Enter
-              </Button>
-            </form>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              {error || 'Unable to load admin data.'}
+            </p>
+            <Button variant="outline" className="w-full" onClick={() => navigate('/dashboard')}>
+              Back to dashboard
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -165,8 +129,8 @@ export default function Admin() {
                   : `${deletedCount} archived deletion${deletedCount === 1 ? '' : 's'}`}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLock}>
-            Lock
+          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
+            Dashboard
           </Button>
         </div>
 

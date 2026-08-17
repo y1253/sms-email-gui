@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Mail, Smartphone, Loader2, CreditCard, ChevronLeft, Trash2,
@@ -12,8 +12,6 @@ import { Separator } from '@/components/ui/separator';
 import InvoiceStatusBadge from '@/components/billing/InvoiceStatusBadge';
 import { formatDate as formatShortDate, formatMoney } from '@/lib/format';
 import { billingLine } from '@/lib/billing';
-
-const SESSION_KEY = 'admin_pwd';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -60,17 +58,12 @@ export default function AdminAccountDetail() {
   const navigate = useNavigate();
   const { userId: userIdParam } = useParams();
   const userId = Number(userIdParam);
-  const password = sessionStorage.getItem(SESSION_KEY) ?? '';
 
-  // Self-gate: without the admin password there's nothing to fetch with, so
-  // bounce back to the password prompt on /admin.
-  if (!password) {
-    return <Navigate to="/admin" replace />;
-  }
-
+  // Access is enforced server-side (JWT + ADMIN_EMAILS allowlist); the JWT is
+  // attached by the axios interceptor.
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-account', userId],
-    queryFn: () => getAdminAccount(password, userId),
+    queryFn: () => getAdminAccount(userId),
     enabled: Number.isFinite(userId),
   });
 
