@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SUPPORT_EMAIL } from '../lib/support';
 
 export default function Privacy() {
   return (
@@ -167,8 +168,8 @@ export default function Privacy() {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">10. Contact</h2>
             <p>
               Questions or requests regarding this Privacy Policy should be sent to{' '}
-              <a href="mailto:yechiel1253@gmail.com" className="text-blue-600 hover:underline">
-                yechiel1253@gmail.com
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-blue-600 hover:underline">
+                {SUPPORT_EMAIL}
               </a>
               .
             </p>
@@ -179,6 +180,8 @@ export default function Privacy() {
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400 mt-16">
         © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
+        {' · '}
+        <Link to="/contact" className="text-blue-600 hover:underline">Contact</Link>
         {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
         {' · '}

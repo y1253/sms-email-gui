@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { usePricing, formatPrice } from '../api/pricing';
+import { SUPPORT_EMAIL } from '../lib/support';
 
 export default function Terms() {
   const { data: pricing } = usePricing();
@@ -67,8 +68,8 @@ export default function Terms() {
               <li>
                 <strong>Help:</strong> Reply <strong>HELP</strong> for assistance, or email
                 us at{' '}
-                <a href="mailto:yechiel1253@gmail.com" className="text-blue-600 hover:underline">
-                  yechiel1253@gmail.com
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-blue-600 hover:underline">
+                  {SUPPORT_EMAIL}
                 </a>
                 .
               </li>
@@ -172,8 +173,8 @@ export default function Terms() {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">12. Contact</h2>
             <p>
               Questions about these Terms should be sent to{' '}
-              <a href="mailto:yechiel1253@gmail.com" className="text-blue-600 hover:underline">
-                yechiel1253@gmail.com
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-blue-600 hover:underline">
+                {SUPPORT_EMAIL}
               </a>
               .
             </p>
@@ -184,6 +185,8 @@ export default function Terms() {
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400 mt-16">
         © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
+        {' · '}
+        <Link to="/contact" className="text-blue-600 hover:underline">Contact</Link>
         {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
         {' · '}

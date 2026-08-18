@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Zap, CreditCard, HelpCircle, LogOut } from 'lucide-react';
+import { Zap, CreditCard, HelpCircle, Mail, LogOut } from 'lucide-react';
 import { getProfile } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/dashboard', label: 'Sets', icon: Zap },
   { to: '/billing', label: 'Billing', icon: CreditCard },
   { to: '/how-it-works', label: 'How it works', icon: HelpCircle },
+  { to: '/contact', label: 'Contact', icon: Mail },
 ];
 
 interface AppSidebarProps {

@@ -12,6 +12,7 @@ import AdminAccountDetail from './pages/AdminAccountDetail';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import HowItWorks from './pages/HowItWorks';
+import Contact from './pages/Contact';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
@@ -57,6 +58,7 @@ export default function Router() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

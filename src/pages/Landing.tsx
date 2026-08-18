@@ -116,6 +116,8 @@ export default function Landing() {
         © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
         <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
         {' · '}
+        <Link to="/contact" className="text-blue-600 hover:underline">Contact</Link>
+        {' · '}
         <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
         {' · '}
         <Link to="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>
