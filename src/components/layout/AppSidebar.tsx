@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Zap, CreditCard, HelpCircle, Mail, LogOut } from 'lucide-react';
 import { getProfile } from '@/api/auth';
 import { Button } from '@/components/ui/button';
+import Logo from '@/components/Logo';
 import { cn } from '@/lib/utils';
 
 // Sets is first — it is the default landing tab for every entry point.
@@ -37,9 +38,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         onClick={onNavigate}
         className="flex h-14 shrink-0 items-center gap-2.5 px-5"
       >
-        <div className="flex size-7 items-center justify-center rounded-lg bg-primary shadow-sm">
-          <Zap className="size-4 text-primary-foreground" />
-        </div>
+        <Logo className="size-7 shrink-0" />
         <span className="text-sm font-bold tracking-tight">EmailOnText</span>
       </Link>
 

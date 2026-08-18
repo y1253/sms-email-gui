@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import {
-  Mail, Smartphone, CreditCard, Loader2, Check, ChevronLeft, Zap,
+  Mail, Smartphone, CreditCard, Loader2, Check, ChevronLeft,
 } from 'lucide-react';
 import { attachCard, listCards } from '@/api/billing';
 import { createSet } from '@/api/sets';
 import { usePricing, formatPrice } from '@/api/pricing';
+import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -259,9 +260,7 @@ export default function Checkout() {
             <ChevronLeft className="size-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary shadow-sm">
-              <Zap className="size-4 text-primary-foreground" />
-            </div>
+            <Logo className="size-7 shrink-0" />
             <span className="text-sm font-bold tracking-tight">EmailOnText</span>
           </div>
         </div>
