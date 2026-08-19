@@ -3,7 +3,7 @@
  *
  * Turns the client-only SPA into real static HTML: for every route in
  * src/seo/routes.ts it renders the React tree to markup, injects a per-route
- * <head>, and writes dist/<path>/index.html. Also emits the noindex SPA shell
+ * <head>, and writes dist/<path>.html. Also emits the noindex SPA shell
  * (dist/app.html) and dist/sitemap.xml.
  *
  * Runs after `vite build` and `vite build --ssr`. Plain .mjs, outside src/, so
@@ -90,9 +90,14 @@ function buildPage(meta, appHtml) {
 // memory on the RAM-constrained production box.
 for (const meta of ROUTES) {
   const html = buildPage(meta, render(meta.path));
-  const outDir = meta.path === '/' ? dist : path.join(dist, meta.path);
-  await mkdir(outDir, { recursive: true });
-  await writeFile(path.join(outDir, 'index.html'), html, 'utf8');
+  // Flat `<path>.html`, not `<path>/index.html`. nginx resolves a directory
+  // via try_files `$uri/`, and that issues an EXTERNAL 301 adding a trailing
+  // slash — so /how-it-works would redirect to /how-it-works/ while the
+  // canonical tag and sitemap both point at the no-slash form. Serving
+  // `$uri.html` returns 200 on the canonical URL with no redirect hop.
+  const out = meta.path === '/' ? path.join(dist, 'index.html') : path.join(dist, `${meta.path}.html`);
+  await mkdir(path.dirname(out), { recursive: true });
+  await writeFile(out, html, 'utf8');
   console.log('prerendered', meta.path);
 }
 
