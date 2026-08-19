@@ -1,0 +1,6 @@
+# https://emailontext.com
+User-agent: *
+Allow: /
+Disallow: /admin
+
+Sitemap: https://emailontext.com/sitemap.xml

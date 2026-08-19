@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SiteFooter from '@/components/marketing/SiteFooter';
 
 /** A single SMS bubble. `from` = the service (left, gray), `you` = the user (right, blue). */
 function Bubble({ side, children }: { side: 'from' | 'you'; children: React.ReactNode }) {
@@ -229,16 +230,7 @@ Invoice #204 is due Friday — reply to confirm receipt.
         </div>
       </main>
 
-      <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-400 mt-16">
-        © {new Date().getFullYear()} EmailOnText. All rights reserved.{' '}
-        <Link to="/how-it-works" className="text-blue-600 hover:underline">How it works</Link>
-        {' · '}
-        <Link to="/contact" className="text-blue-600 hover:underline">Contact</Link>
-        {' · '}
-        <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
-        {' · '}
-        <Link to="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
