@@ -20,7 +20,7 @@ export const SUPPORT_EMAIL = 'support@emailontext.com';
  * with the backend PRICE env var: the JSON-LD Offer below must match the price
  * a visitor actually sees, or rich results get flagged.
  */
-export const FALLBACK_PRICE = 10;
+export const FALLBACK_PRICE = 8.99;
 
 export type RouteMeta = {
   /** Starts with '/', never ends with one (except the root itself). */
@@ -258,7 +258,7 @@ export const ROUTES: RouteMeta[] = [
     path: '/',
     title: 'Email to Text Service — Get Your Gmail as SMS | EmailOnText',
     description:
-      'EmailOnText is an email to text service that sends your Gmail to your phone as SMS and lets you reply by text. No internet, no data plan, no app. $10/month.',
+      'EmailOnText is an email to text service that sends your Gmail to your phone as SMS and lets you reply by text. No internet, no data plan, no app. $8.99/month.',
     ogTitle: 'Email to Text Service — Get Your Gmail as SMS',
     priority: 1.0,
     jsonLd: homeJsonLd,

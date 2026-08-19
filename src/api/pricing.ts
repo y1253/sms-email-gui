@@ -31,7 +31,7 @@ export const usePricing = () =>
     queryFn: getPricing,
     // placeholderData, not initialData: it is never written to the cache and
     // never suppresses the real fetch, so server render == client first render
-    // == "$10", and the live value replaces it a moment later.
+    // == the fallback price, and the live value replaces it a moment later.
     placeholderData: FALLBACK_PRICING,
   });
 
