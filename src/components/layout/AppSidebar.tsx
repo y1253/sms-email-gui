@@ -28,12 +28,14 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const displayName = profile?.firstName || profile?.email?.split('@')[0];
 
   const logout = () => {
-    // Drop the token first, then every cached authenticated response. Without
-    // the clear, React Query keeps profile/sets/billing data in memory and the
-    // back button re-renders a signed-in looking page from cache until a
-    // refetch 401s. replace: true keeps the authenticated route out of history
-    // altogether.
-    localStorage.removeItem('token');
+    // Clear both web storages wholesale rather than removing known keys, so
+    // nothing survives logout by having been added later and forgotten here.
+    // Then drop every cached authenticated response: without it React Query
+    // keeps profile/sets/billing data in memory and the back button re-renders
+    // a signed-in looking page from cache until a refetch 401s. replace: true
+    // keeps the authenticated route out of history altogether.
+    localStorage.clear();
+    sessionStorage.clear();
     queryClient.clear();
     navigate('/login', { replace: true });
   };
