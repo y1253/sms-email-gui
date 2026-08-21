@@ -102,11 +102,14 @@ export default function Account() {
 
   const passwordMut = useMutation({
     mutationFn: () => changePassword({ current_password: current, new_password: next }),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // The change revoked every token for this account, this tab's included.
+      // Swap in the replacement before anything else fires a request.
+      localStorage.setItem('token', data.token);
       setCurrent('');
       setNext('');
       setConfirm('');
-      toast.success('Password updated');
+      toast.success('Password updated. Other devices have been signed out.');
     },
     onError: (err) => setPwError(apiError(err, "Couldn't update password")),
   });

@@ -5,10 +5,12 @@
 const STATE_KEY = 'google_oauth_state';
 
 function makeState(flow: 'auth' | 'gmail_addset'): string {
-  const nonce =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2);
+  // CSPRNG only. This nonce is a CSRF token, so Math.random() is not
+  // acceptable even as a fallback. getRandomValues is available in insecure
+  // contexts too, where crypto.randomUUID (secure-context only) is not.
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const nonce = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
   const state = `${flow}.${nonce}`;
   sessionStorage.setItem(STATE_KEY, state);
   return state;

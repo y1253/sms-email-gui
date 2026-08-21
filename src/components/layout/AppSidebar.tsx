@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Zap, CreditCard, HelpCircle, Mail, LogOut, User } from 'lucide-react';
 import { getProfile } from '@/api/auth';
 import { Button } from '@/components/ui/button';
@@ -21,14 +21,21 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: getProfile });
 
   // Google accounts without a given_name, and legacy rows, have no first name.
   const displayName = profile?.firstName || profile?.email?.split('@')[0];
 
   const logout = () => {
+    // Drop the token first, then every cached authenticated response. Without
+    // the clear, React Query keeps profile/sets/billing data in memory and the
+    // back button re-renders a signed-in looking page from cache until a
+    // refetch 401s. replace: true keeps the authenticated route out of history
+    // altogether.
     localStorage.removeItem('token');
-    navigate('/login');
+    queryClient.clear();
+    navigate('/login', { replace: true });
   };
 
   return (

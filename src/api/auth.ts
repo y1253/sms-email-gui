@@ -28,10 +28,18 @@ export const getProfile = () =>
 export const updateProfile = (data: { first_name: string; last_name?: string }) =>
   api.put<Profile>('/users/profile', data).then((r) => r.data);
 
+/**
+ * Changing the password terminates every session for the account, including
+ * this one, so the server returns a replacement token for the caller. Store it
+ * or the next request 401s.
+ */
 export const changePassword = (data: {
   current_password: string;
   new_password: string;
-}) => api.post<{ ok: true }>('/users/password', data).then((r) => r.data);
+}) =>
+  api
+    .post<{ ok: true; token: string }>('/users/password', data)
+    .then((r) => r.data);
 
 /**
  * Always resolves ok, even for an address with no account — the server refuses

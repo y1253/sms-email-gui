@@ -16,11 +16,15 @@ export default function GoogleCallback() {
     if (ran.current) return;
     ran.current = true;
 
+    // Every navigation out of this page uses replace, so the callback URL --
+    // which carries Google's ?code= in its query string -- is not left behind
+    // in browser history. The code is single-use and consumed below, but it
+    // should not persist in the history stack either.
     const code = params.get('code');
     const rawState = params.get('state');
 
     if (!code) {
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
 
@@ -36,7 +40,9 @@ export default function GoogleCallback() {
       setIsGmailConnect(true);
       // Hand the new emailId back so the reopened modal can select it.
       connectEmail(code)
-        .then((em) => navigate(`/dashboard?addSet=1&emailId=${em.emailId}`))
+        .then((em) =>
+          navigate(`/dashboard?addSet=1&emailId=${em.emailId}`, { replace: true }),
+        )
         .catch((e) => {
           const msg = e?.response?.data?.message ?? e?.message ?? 'Failed to connect Gmail';
           setError(msg);
@@ -48,7 +54,7 @@ export default function GoogleCallback() {
     googleLogin(code)
       .then((data) => {
         localStorage.setItem('token', data.accessToken);
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       })
       .catch((e) => {
         const msg = e?.response?.data?.message ?? e?.message ?? 'Google sign-in failed';
@@ -90,7 +96,7 @@ export default function GoogleCallback() {
               </button>
             )}
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/dashboard', { replace: true })}
               className="text-sm underline text-gray-600 hover:text-gray-900"
             >
               Back to dashboard
