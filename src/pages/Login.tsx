@@ -55,6 +55,11 @@ export default function Login() {
               required
               autoComplete="current-password"
             />
+            <div className="-mt-2 text-right">
+              <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" loading={mutation.isPending} className="w-full mt-1">
               Sign in

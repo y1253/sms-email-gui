@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Zap, CreditCard, HelpCircle, Mail, LogOut } from 'lucide-react';
+import { Zap, CreditCard, HelpCircle, Mail, LogOut, User } from 'lucide-react';
 import { getProfile } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -64,9 +64,22 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
       </nav>
 
       <div className="shrink-0 border-t border-foreground/5 px-3 py-3">
-        {displayName && (
-          <p className="truncate px-3 pb-1.5 text-sm font-medium">{displayName}</p>
-        )}
+        {/* The name is the way into account settings — there is no nav item. */}
+        <NavLink
+          to="/account"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
+              isActive
+                ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
+                : 'font-medium hover:bg-sidebar-accent/60',
+            )
+          }
+        >
+          <User className="size-4 shrink-0" />
+          <span className="truncate">{displayName ?? 'Account'}</span>
+        </NavLink>
         <Button
           variant="ghost"
           size="sm"

@@ -51,9 +51,9 @@ export default function Register() {
     setError('');
     setFieldErrors({});
 
-    // Mirror the server's @MinLength(6) so users don't round-trip for it.
-    if (form.password.length < 6) {
-      setFieldErrors({ password: 'Password must be at least 6 characters' });
+    // Mirror the server's @MinLength(12) so users don't round-trip for it.
+    if (form.password.length < 12) {
+      setFieldErrors({ password: 'Password must be at least 12 characters' });
       return;
     }
     if (form.password !== form.confirm_password) {

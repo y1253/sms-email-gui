@@ -3,9 +3,11 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import GoogleCallback from './pages/GoogleCallback';
 import Dashboard from './pages/Dashboard';
 import Billing from './pages/Billing';
+import Account from './pages/Account';
 import Checkout from './pages/Checkout';
 import AppLayout from './components/layout/AppLayout';
 import Admin from './pages/Admin';
@@ -52,6 +54,7 @@ export default function Router() {
       <Route path="/" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+      <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
       {/* Sidebar shell. No index route — every entry point navigates to
           /dashboard explicitly, so Sets is the default tab. */}
@@ -64,6 +67,7 @@ export default function Router() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/billing" element={<Billing />} />
+        <Route path="/account" element={<Account />} />
       </Route>
       <Route
         path="/checkout"
