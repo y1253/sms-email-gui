@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ChevronRight } from 'lucide-react';
+import {
+  Loader2,
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  Search,
+  X,
+} from 'lucide-react';
 import {
   getAdminAccounts,
   getDeletedContacts,
@@ -11,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 type Account = AdminAccount;
 
@@ -20,6 +28,125 @@ function formatDate(iso: string) {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+type SortKey = 'userId' | 'name' | 'email' | 'setCount' | 'createdAt';
+type Sort = { key: SortKey; dir: 'asc' | 'desc' };
+
+type StatusFilter = 'all' | 'active' | 'inactive';
+type SetsFilter = 'all' | 'has' | 'none';
+type CancelFilter = 'all' | 'cancelling' | 'cancelled';
+
+const NO_NAME = '—';
+
+/** Digits only, so "5551234" matches a stored "+1 (555) 123-4567". */
+const digits = (v: string) => v.replace(/\D/g, '');
+
+/** The two text columns can be empty; those rows sort last either direction. */
+function blankFor(a: Account, key: SortKey) {
+  if (key === 'name') return !a.name || a.name === NO_NAME;
+  if (key === 'email') return !a.email;
+  return false;
+}
+
+function compareBy(a: Account, b: Account, key: SortKey): number {
+  switch (key) {
+    case 'userId':
+      return a.userId - b.userId;
+    case 'setCount':
+      return a.setCount - b.setCount;
+    case 'createdAt':
+      return +new Date(a.createdAt) - +new Date(b.createdAt);
+    case 'name':
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    case 'email':
+      return (a.email ?? '').localeCompare(b.email ?? '', undefined, {
+        sensitivity: 'base',
+      });
+  }
+}
+
+/** Matched against name, login email, id, and every connected email/phone. */
+function matchesQuery(a: Account, q: string) {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return true;
+  const haystack = [a.name, a.email ?? '', String(a.userId), ...a.emails].join(' ');
+  if (haystack.toLowerCase().includes(needle)) return true;
+  const asDigits = digits(needle);
+  return (
+    !!asDigits && a.phones.some((p) => digits(p).includes(asDigits))
+  );
+}
+
+/**
+ * A segmented control, same shape as the Accounts/Deleted view toggle below —
+ * there is no `select` primitive in components/ui, and one isn't worth adding
+ * for three fixed choices apiece.
+ */
+function FilterGroup<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={cn(
+              'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+              value === o.value
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: Sort;
+  onSort: (key: SortKey) => void;
+}) {
+  const active = sort.key === sortKey;
+  const Arrow = active && sort.dir === 'asc' ? ChevronUp : ChevronDown;
+  return (
+    <th className="px-4 py-3">
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+        className={cn(
+          'inline-flex items-center gap-1 uppercase tracking-wide transition-colors hover:text-foreground',
+          active && 'text-foreground',
+        )}
+      >
+        {label}
+        <Arrow className={cn('size-3', active ? 'opacity-100' : 'opacity-25')} />
+      </button>
+    </th>
+  );
 }
 
 /**
@@ -61,6 +188,17 @@ export default function Admin() {
   const [deleted, setDeleted] = useState<DeletedContacts | null>(null);
   const [view, setView] = useState<'accounts' | 'deleted'>('accounts');
 
+  // Filtering, sorting and search all run client-side: the endpoint is
+  // unpaginated and already ships the whole list, and cancellation status is
+  // resolved from Stripe in JS after the SQL runs, so it can't be a WHERE.
+  const [query, setQuery] = useState('');
+  const [joinedFrom, setJoinedFrom] = useState('');
+  const [joinedTo, setJoinedTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [setsFilter, setSetsFilter] = useState<SetsFilter>('all');
+  const [cancelFilter, setCancelFilter] = useState<CancelFilter>('all');
+  const [sort, setSort] = useState<Sort>({ key: 'createdAt', dir: 'desc' });
+
   // Access is enforced server-side by the JWT + ADMIN_EMAILS allowlist. Just try
   // to load; a 401/403 means this user isn't an admin.
   useEffect(() => {
@@ -86,6 +224,68 @@ export default function Admin() {
       getDeletedContacts().then(setDeleted).catch(() => {});
     }
   }, [accounts]);
+
+  const filtered = useMemo(() => {
+    if (!accounts) return [];
+    // Both bounds are inclusive: the To date covers the whole day it names.
+    const from = joinedFrom ? new Date(`${joinedFrom}T00:00:00`) : null;
+    const to = joinedTo ? new Date(`${joinedTo}T23:59:59.999`) : null;
+
+    const rows = accounts.filter((a) => {
+      if (!matchesQuery(a, query)) return false;
+
+      const joined = new Date(a.createdAt);
+      if (from && joined < from) return false;
+      if (to && joined > to) return false;
+
+      // `active` is a nullable tinyint; null reads as inactive, matching the
+      // Status badge.
+      if (statusFilter === 'active' && !a.active) return false;
+      if (statusFilter === 'inactive' && a.active) return false;
+
+      if (setsFilter === 'has' && a.setCount === 0) return false;
+      if (setsFilter === 'none' && a.setCount > 0) return false;
+
+      if (cancelFilter === 'cancelling' && a.pendingCancelCount === 0) return false;
+      if (cancelFilter === 'cancelled' && a.cancelledCount === 0) return false;
+
+      return true;
+    });
+
+    const factor = sort.dir === 'asc' ? 1 : -1;
+    return rows.sort((a, b) => {
+      const blankA = blankFor(a, sort.key);
+      const blankB = blankFor(b, sort.key);
+      if (blankA !== blankB) return blankA ? 1 : -1;
+      return compareBy(a, b, sort.key) * factor;
+    });
+  }, [accounts, query, joinedFrom, joinedTo, statusFilter, setsFilter, cancelFilter, sort]);
+
+  // A new column starts newest/largest first; dates and counts read better that
+  // way, names and emails A-Z.
+  const toggleSort = (key: SortKey) =>
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' }
+        : { key, dir: key === 'name' || key === 'email' ? 'asc' : 'desc' },
+    );
+
+  const filtersActive =
+    !!query ||
+    !!joinedFrom ||
+    !!joinedTo ||
+    statusFilter !== 'all' ||
+    setsFilter !== 'all' ||
+    cancelFilter !== 'all';
+
+  const clearFilters = () => {
+    setQuery('');
+    setJoinedFrom('');
+    setJoinedTo('');
+    setStatusFilter('all');
+    setSetsFilter('all');
+    setCancelFilter('all');
+  };
 
   if (loading && accounts === null) {
     return (
@@ -123,7 +323,9 @@ export default function Admin() {
             <h1 className="text-2xl font-bold tracking-tight">Admin</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {view === 'accounts'
-                ? `${accounts.length} account${accounts.length === 1 ? '' : 's'}`
+                ? filtersActive
+                  ? `${filtered.length} of ${accounts.length} account${accounts.length === 1 ? '' : 's'}`
+                  : `${accounts.length} account${accounts.length === 1 ? '' : 's'}`
                 : deletedCount === null
                   ? 'Loading…'
                   : `${deletedCount} archived deletion${deletedCount === 1 ? '' : 's'}`}
@@ -157,6 +359,80 @@ export default function Admin() {
 
         {view === 'accounts' && (
         <>
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Search</span>
+            <div className="relative w-64">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Name, email, phone, or #"
+                className="pl-8"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Joined from</span>
+            <Input
+              type="date"
+              value={joinedFrom}
+              max={joinedTo || undefined}
+              onChange={(e) => setJoinedFrom(e.target.value)}
+              className="w-40"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Joined to</span>
+            <Input
+              type="date"
+              value={joinedTo}
+              min={joinedFrom || undefined}
+              onChange={(e) => setJoinedTo(e.target.value)}
+              className="w-40"
+            />
+          </div>
+
+          <FilterGroup
+            label="Account"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+          />
+          <FilterGroup
+            label="Sets"
+            value={setsFilter}
+            onChange={setSetsFilter}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'has', label: 'Has set' },
+              { value: 'none', label: 'No sets' },
+            ]}
+          />
+          <FilterGroup
+            label="Cancellation"
+            value={cancelFilter}
+            onChange={setCancelFilter}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'cancelling', label: 'Cancelling' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
+          />
+
+          {filtersActive && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <X className="size-3.5" />
+              Clear
+            </Button>
+          )}
+        </div>
+
         {/* One Stripe call feeds every row's Billing cell, so if it failed the
             whole column is blank — say so instead of implying nobody pays. */}
         {accounts[0]?.subscriptionsError && (
@@ -169,21 +445,21 @@ export default function Admin() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/40 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
+                  <SortHeader label="#" sortKey="userId" sort={sort} onSort={toggleSort} />
+                  <SortHeader label="Name" sortKey="name" sort={sort} onSort={toggleSort} />
+                  <SortHeader label="Email" sortKey="email" sort={sort} onSort={toggleSort} />
                   <th className="px-4 py-3">Auth</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Sets</th>
+                  <SortHeader label="Sets" sortKey="setCount" sort={sort} onSort={toggleSort} />
                   <th className="px-4 py-3">Billing</th>
-                  <th className="px-4 py-3">Joined</th>
+                  <SortHeader label="Joined" sortKey="createdAt" sort={sort} onSort={toggleSort} />
                   <th className="px-4 py-3">Connected Emails</th>
                   <th className="px-4 py-3">Phones</th>
                   <th className="px-4 py-3" aria-label="View" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {accounts.map((a) => (
+                {filtered.map((a) => (
                   <tr
                     key={a.userId}
                     onClick={() => navigate(`/admin/accounts/${a.userId}`)}
@@ -230,6 +506,15 @@ export default function Admin() {
                     </td>
                   </tr>
                 ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={11} className="px-4 py-6 text-center text-muted-foreground">
+                      {accounts.length === 0
+                        ? 'No accounts yet.'
+                        : 'No accounts match these filters.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

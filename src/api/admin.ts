@@ -15,6 +15,9 @@ export type AdminAccount = {
   pendingCancelAt: string | null;
   pendingCancelCount: number;
   promoCount: number;
+  // Sets that have ended, torn down here or cancelled from the Stripe
+  // dashboard. Unlike the counts above this one includes deleted sets.
+  cancelledCount: number;
   subscriptionsError: string | null;
   emails: string[];
   phones: string[];

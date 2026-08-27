@@ -39,9 +39,8 @@ export default function ForgotPassword() {
           {sentTo ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-gray-700">
-                If an account exists for{' '}
-                <span className="font-medium text-gray-900">{sentTo}</span>, we've
-                sent it a temporary password.
+                We've sent a temporary password to{' '}
+                <span className="font-medium text-gray-900">{sentTo}</span>.
               </p>
               <p className="text-sm text-gray-500">
                 It expires in 30 minutes. Sign in with it, then set a password of
@@ -55,7 +54,8 @@ export default function ForgotPassword() {
             <>
               <p className="text-sm text-gray-500 mb-4">
                 Enter the email address on your account and we'll send you a
-                temporary password to sign back in with.
+                temporary password to sign back in with. We'll tell you right
+                away if there's no account for that address.
               </p>
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <Input

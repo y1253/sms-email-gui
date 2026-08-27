@@ -42,9 +42,10 @@ export const changePassword = (data: {
     .then((r) => r.data);
 
 /**
- * Always resolves ok, even for an address with no account — the server refuses
- * to reveal which addresses are registered, so the UI shows one message either
- * way.
+ * Resolves only once the email has actually gone out, so the caller can show a
+ * real confirmation. Rejects with the reason otherwise: 404 for an address with
+ * no account, 400 for a Google-only account that has no password to reset, 503
+ * when the send itself failed. `apiError()` surfaces each message verbatim.
  */
 export const forgotPassword = (data: { email: string }) =>
   api.post<{ ok: true }>('/users/forgot-password', data).then((r) => r.data);
