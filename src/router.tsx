@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { clearSession, isExpired, readToken, signOut } from './lib/token';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -20,13 +21,27 @@ import GuidesIndex from './pages/guides/GuidesIndex';
 import GuidePage from './pages/guides/GuidePage';
 import NotFound from './pages/NotFound';
 
-/** There is no localStorage during prerender, and no token either. */
-const readToken = () =>
-  typeof window === 'undefined' ? null : localStorage.getItem('token');
-
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // Protected routes are never prerendered, so redirecting synchronously is fine.
-  if (!readToken()) return <Navigate to="/login" replace />;
+  const token = readToken();
+
+  // A token that has plainly run out is torn down here rather than left to the
+  // API: mounting the shell just to have its first request 401 costs the user a
+  // round-trip staring at a skeleton before the same thing happens. This is the
+  // one case that needs signOut's full navigation rather than <Navigate> —
+  // the login page has to be told why it is showing.
+  const expired = !!token && isExpired(token);
+  useEffect(() => {
+    if (expired) signOut('expired');
+  }, [expired]);
+
+  // Never signed in: no teardown needed and nothing to explain, so the cheap
+  // in-router redirect is right. Protected routes are never prerendered, so
+  // redirecting synchronously is fine.
+  if (!token) return <Navigate to="/login" replace />;
+
+  // Signing out — the effect above is mid-navigation.
+  if (expired) return null;
+
   return <>{children}</>;
 }
 
@@ -39,7 +54,16 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   // would diverge from the server output for a logged-in visitor on `/`, which
   // React 19 punishes with a full client re-render of the root.
   useEffect(() => {
-    if (localStorage.getItem('token')) {
+    // Same liveness test as ProtectedRoute. If these two ever disagree, a stale
+    // token bounces the user /login -> /dashboard -> /login.
+    const token = readToken();
+    if (token && isExpired(token)) {
+      // Arriving at a public page holding a dead token: drop it so the request
+      // interceptor stops attaching it, and let this page render.
+      clearSession();
+      return;
+    }
+    if (token) {
       setRedirecting(true);
       navigate('/dashboard', { replace: true });
     }

@@ -1,16 +1,35 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { login, googleLogin } from '../api/auth';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { buildGoogleAuthUrl } from '../lib/googleOauth';
 
+/**
+ * Why the user was sent here, when they didn't choose to come. Mapped from a
+ * closed set of `?reason` values to copy written here — the query string is
+ * never rendered, or `/login?reason=<anything>` would be a phishing surface.
+ */
+const SIGNED_OUT: Record<string, string> = {
+  expired: 'Your session expired. Please sign in again.',
+  revoked: 'Your password was changed, so you were signed out. Please sign in again.',
+  invalid: 'You were signed out. Please sign in again.',
+};
+
 export default function Login() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState(() => SIGNED_OUT[params.get('reason') ?? ''] ?? '');
+
+  // Drop the param once it has been read, so a refresh or a later visit to
+  // /login doesn't re-announce a sign-out the user has already dealt with.
+  useEffect(() => {
+    if (params.has('reason')) setParams({}, { replace: true });
+  }, []);
 
   const mutation = useMutation({
     mutationFn: () => login({ email, password }),
@@ -24,6 +43,7 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotice('');
     mutation.mutate();
   };
 
@@ -61,6 +81,7 @@ export default function Login() {
               </Link>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
+            {!error && notice && <p className="text-sm text-amber-600">{notice}</p>}
             <Button type="submit" loading={mutation.isPending} className="w-full mt-1">
               Sign in
             </Button>

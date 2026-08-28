@@ -4,6 +4,7 @@ import { Zap, CreditCard, HelpCircle, Mail, LogOut, User } from 'lucide-react';
 import { getProfile } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
+import { clearSession } from '@/lib/token';
 import { cn } from '@/lib/utils';
 
 // Sets is first — it is the default landing tab for every entry point.
@@ -28,14 +29,13 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const displayName = profile?.firstName || profile?.email?.split('@')[0];
 
   const logout = () => {
-    // Clear both web storages wholesale rather than removing known keys, so
-    // nothing survives logout by having been added later and forgotten here.
+    // clearSession wipes both web storages; the same helper runs when the API
+    // reports an expired session, so the two sign-out paths cannot drift.
     // Then drop every cached authenticated response: without it React Query
     // keeps profile/sets/billing data in memory and the back button re-renders
     // a signed-in looking page from cache until a refetch 401s. replace: true
     // keeps the authenticated route out of history altogether.
-    localStorage.clear();
-    sessionStorage.clear();
+    clearSession();
     queryClient.clear();
     navigate('/login', { replace: true });
   };
