@@ -60,9 +60,9 @@ export default function HowItWorks() {
       <main className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-2">How it works</h1>
         <p className="text-gray-500 text-lg mb-10 max-w-2xl">
-          EmailOnText turns your inbox into text messages. When an email arrives, you get a short SMS
-          summary — and you can reply or send new emails just by texting back. Here's exactly what
-          that looks like.
+          EmailOnText turns your inbox into text messages. When an email arrives, AI condenses it
+          into a short SMS summary — and you can reply or send new emails just by texting back.
+          Here's exactly what that looks like.
         </p>
 
         <section className="space-y-12">

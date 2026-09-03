@@ -76,9 +76,11 @@ const faq = (pairs: Array<[string, string]>) => ({
 
 /**
  * Every question here is also rendered as visible text on the page it belongs
- * to — Google treats FAQ markup that isn't on the page as a violation.
+ * to — Google treats FAQ markup that isn't on the page as a violation. These
+ * pairs used to live on the homepage; they moved to /what-is-email-to-text
+ * with the rest of the long-form copy, and the FAQPage JSON-LD moved with them.
  */
-export const HOME_FAQ: Array<[string, string]> = [
+export const EMAIL_TO_TEXT_FAQ: Array<[string, string]> = [
   [
     'What is an email to text service?',
     'An email to text service delivers email to a mobile phone as an SMS message. EmailOnText watches a Gmail account you connect and sends each important email to your phone as a text, so you can read and answer email without opening an inbox.',
@@ -101,7 +103,7 @@ export const HOME_FAQ: Array<[string, string]> = [
   ],
   [
     'How does a long email fit in a text message?',
-    'Each email is summarized to fit one 160-character SMS, with the sender and subject line kept intact so you can tell at a glance whether it needs an answer.',
+    'Each email is summarized by AI to fit one 160-character SMS, with the sender and subject line kept intact so you can tell at a glance whether it needs an answer.',
   ],
   [
     'Why did my carrier email to text gateway stop working?',
@@ -231,7 +233,7 @@ const homeJsonLd = [
     '@type': 'SoftwareApplication',
     name: BRAND,
     description:
-      'Email to text service that forwards Gmail to your phone as SMS and lets you reply by text, with no internet connection required.',
+      'Email to text service that forwards Gmail to your phone as SMS, summarized by AI, and lets you reply by text, with no internet connection required.',
     applicationCategory: 'CommunicationApplication',
     operatingSystem: 'Any (SMS)',
     url: SITE_URL,
@@ -250,18 +252,32 @@ const homeJsonLd = [
     provider: { '@id': ORG_ID },
     areaServed: 'US',
   },
-  faq(HOME_FAQ),
 ];
 
 export const ROUTES: RouteMeta[] = [
   {
     path: '/',
-    title: 'Email to Text Service — Get Your Gmail as SMS | EmailOnText',
+    title: 'Email to Text Service — Your Gmail as SMS, Summarized by AI | EmailOnText',
     description:
-      'EmailOnText is an email to text service that sends your Gmail to your phone as SMS and lets you reply by text. No internet, no data plan, no app. $8.99/month.',
-    ogTitle: 'Email to Text Service — Get Your Gmail as SMS',
+      'EmailOnText is an email to text service that sends your Gmail to your phone as SMS, summarized by AI, and lets you reply by text. No internet, no data plan, no app. $8.99/month.',
+    ogTitle: 'Email to Text, Summarized by AI',
     priority: 1.0,
     jsonLd: homeJsonLd,
+  },
+  {
+    path: '/what-is-email-to-text',
+    title: 'What Is an Email to Text Service? | EmailOnText',
+    description:
+      'How email to text works, why the free carrier gateways at vtext.com and tmomail.net shut down, and how EmailOnText delivers Gmail to any phone as an AI-summarized SMS.',
+    ogTitle: 'What Is an Email to Text Service?',
+    priority: 0.8,
+    jsonLd: [
+      breadcrumb([
+        ['Home', '/'],
+        ['What is an email to text service?', '/what-is-email-to-text'],
+      ]),
+      faq(EMAIL_TO_TEXT_FAQ),
+    ],
   },
   {
     path: '/how-it-works',

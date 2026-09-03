@@ -36,4 +36,8 @@ export const usePricing = () =>
   });
 
 // Assumes USD ($). If more currencies are added, format from p.currency here.
-export const formatPrice = (p?: Pricing) => (p ? `$${p.price}` : '');
+// Checks the field, not just the object: a /pricing call that resolves to
+// something other than a Pricing — an HTML error page served with a 200, say —
+// used to render the literal string "$undefined" on the landing page.
+export const formatPrice = (p?: Pricing) =>
+  typeof p?.price === 'number' ? `$${p.price}` : '';
