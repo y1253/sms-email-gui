@@ -77,8 +77,8 @@ export default function HowItWorks() {
             }
           >
             <Bubble side="from">
-              {`To: you@gmail.com
-From: Bob Smith bob@work.com
+              {`From: Bob Smith bob@work.com
+To: you@gmail.com
 
 Invoice #204 is due Friday — reply to confirm receipt.
 
